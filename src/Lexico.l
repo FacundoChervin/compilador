@@ -44,6 +44,7 @@ INTEGER                   (I|i)(N|n)(T|t)(E|e)(G|g)(E|e)(R|r)
 AND                       (A|a)(N|n)(D|d)
 OR                        (O|o)(R|r)
 NOT                       (N|n)(O|o)(T|t)
+ELSE                      (E|e)(L|l)(S|s)(E|e)
 
 NUM_INTEGER               [0-9]+
 NUM_FLOAT                 ([0-9]+"."[0-9]*)|([0-9]*"."[0-9]+)
@@ -69,6 +70,7 @@ END_COMMENT               "/-"
 {AND}                     {flex_log("[%s]", yytext); return AND;}
 {OR}                      {flex_log("[%s]", yytext); return OR;}
 {NOT}                     {flex_log("[%s]", yytext); return NOT;}
+{ELSE}                    {flex_log("[%s]", yytext); return ELSE;}
 
 {NUM_INTEGER}             {flex_log("[ENTERO] %d", atoi(yytext)); return CONST_INTEGER;}
 {NUM_FLOAT}               {flex_log("[REAL]   %f", atof(yytext)); return CONST_FLOAT;}
@@ -78,6 +80,8 @@ END_COMMENT               "/-"
 ":="                      {flex_log("[%s]", yytext); return ASIG;}
 "("                       {flex_log("[Abre parentesis]"); return A_P;}
 ")"                       {flex_log("[Cierra parentesis]"); return C_P;}
+"{"                       {flex_log("[Abre llaves]"); return A_L;}
+"}"                       {flex_log("[Cierra llaves]"); return C_L;}
 "+"                       {flex_log("[Suma]"); return SUM;}
 "-"                       {flex_log("[Resta]"); return MINUS;}
 "*"                       {flex_log("[Multiplicacion]"); return MUL;}
@@ -94,6 +98,7 @@ END_COMMENT               "/-"
 "=="                      {flex_log("[Igual]"); return EQ;}
 "!="                      {flex_log("[Distinto]"); return NE;}
 
+<<<<<<< Updated upstream
 {INIT_COMMENT}            	{ BEGIN(C_COMMENT); }
 <C_COMMENT>{END_COMMENT} 	{ BEGIN(INITIAL); }
 <C_COMMENT>\n   			{ }
@@ -104,5 +109,7 @@ END_COMMENT               "/-"
 <C_COMMENT_2>.    			{ }
 <C_COMMENT_2>{END_COMMENT} 	{ BEGIN(C_COMMENT); }
 
+=======
+>>>>>>> Stashed changes
 "\n"
 "\t"
