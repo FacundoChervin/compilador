@@ -27,6 +27,8 @@ void flex_log(const char* msg, ...) {
 %}
 %option noyywrap  
 %option yylineno 
+%x C_COMMENT
+%x C_COMMENT_2
 
 WHILE                     (W|w)(H|h)(I|i)(L|l)(E|e)
 IF                        (I|i)(F|f)
@@ -92,7 +94,15 @@ END_COMMENT               "/-"
 "=="                      {flex_log("[Igual]"); return EQ;}
 "!="                      {flex_log("[Distinto]"); return NE;}
 
-{INIT_COMMENT}{PHRASE}*{INIT_COMMENT}?{PHRASE}*{END_COMMENT}?{PHRASE}*{END_COMMENT} {flex_log("[Comentario] %s (No genera token)", yytext);}
+{INIT_COMMENT}            	{ BEGIN(C_COMMENT); }
+<C_COMMENT>{END_COMMENT} 	{ BEGIN(INITIAL); }
+<C_COMMENT>\n   			{ }
+<C_COMMENT>.    			{ }
+<C_COMMENT>{INIT_COMMENT} 	{ BEGIN(C_COMMENT_2);}
+<C_COMMENT_2>{INIT_COMMENT} {flex_log("Solo se permite un nivel de anidamiento de comentarios") ;yyerror("Solo se permite un nivel de anidamiento de comentarios"); }
+<C_COMMENT_2>\n   			{ }
+<C_COMMENT_2>.    			{ }
+<C_COMMENT_2>{END_COMMENT} 	{ BEGIN(C_COMMENT); }
 
 "\n"
 "\t"
