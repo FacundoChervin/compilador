@@ -98,18 +98,15 @@ END_COMMENT               "/-"
 "=="                      {flex_log("[Igual]"); return EQ;}
 "!="                      {flex_log("[Distinto]"); return NE;}
 
-<<<<<<< Updated upstream
 {INIT_COMMENT}            	{ BEGIN(C_COMMENT); }
-<C_COMMENT>{END_COMMENT} 	{ BEGIN(INITIAL); }
-<C_COMMENT>\n   			{ }
-<C_COMMENT>.    			{ }
+<C_COMMENT>{END_COMMENT} 	  { BEGIN(INITIAL); }
+<C_COMMENT>\n   			      { }
+<C_COMMENT>.    			      { }
 <C_COMMENT>{INIT_COMMENT} 	{ BEGIN(C_COMMENT_2);}
 <C_COMMENT_2>{INIT_COMMENT} {flex_log("Solo se permite un nivel de anidamiento de comentarios") ;yyerror("Solo se permite un nivel de anidamiento de comentarios"); }
-<C_COMMENT_2>\n   			{ }
-<C_COMMENT_2>.    			{ }
+<C_COMMENT_2>\n   			    { }
+<C_COMMENT_2>.    			    { }
 <C_COMMENT_2>{END_COMMENT} 	{ BEGIN(C_COMMENT); }
 
-=======
->>>>>>> Stashed changes
 "\n"
 "\t"
