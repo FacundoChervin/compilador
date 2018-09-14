@@ -1,1 +1,5 @@
--/ as as afwefg248090=)UF=) -/SAF -/SAF A/- A/- safa  /- 
+-/ as as afwefg248090=)UF=) -/SAF  A/- safa  /- 
+DECVAR
+a:FLOAT
+ENDDEC
+a:=25.5
