@@ -15,6 +15,7 @@
 #define TIPO_ENTERO 201
 #define TIPO_FLOAT 202
 
+#define MAXSIZEPILA 20
 #define TABLA_SIMBOLOS "ts.txt"
 
 int yystopparser=0;
@@ -25,6 +26,10 @@ struct itemTabla {
     int tipo;
 } itemTabla ;
 FILE * file;
+
+struct itemTabla *lectura;      
+struct itemTabla* stack[MAXSIZEPILA];     
+int top = -1;      
 
 void bison_log(const char* msg, ...) {
   
@@ -41,6 +46,48 @@ void bison_log(const char* msg, ...) {
 
   return;
 }
+int isempty() {
+
+   if(top == -1)
+      return 1;
+   else
+      return 0;
+}
+   
+int isfull() {
+
+   if(top == MAXSIZEPILA)
+      return 1;
+   else
+      return 0;
+}
+
+struct itemTabla* peek() {
+   return stack[top];
+}
+
+struct itemTabla* pilaPop() {
+   struct itemTabla* data;
+	
+   if(!isempty()) {
+      data = stack[top];
+      top = top - 1;   
+      return data;
+   } else {
+      printf("Could not retrieve data, Stack is empty.\n");
+   }
+}
+
+void pilaPush(struct itemTabla* data) {
+
+   if(!isfull()) {
+      top = top + 1;   
+      stack[top] = data;
+   } else {
+      printf("Could not insert data, Stack is full.\n");
+   }
+}
+
 
 %}
 %union {
@@ -93,7 +140,28 @@ while_statement: WHILE A_P condition C_P A_L list_statement C_L               {b
 if_statement: IF A_P condition C_P A_L list_statement C_L                             {bison_log("%d = %s", 0, "if_statement");}
             | IF A_P condition C_P A_L list_statement C_L ELSE A_L list_statement C_L {bison_log("%d = %s", 0, "if_statement");};
             
-assignement: VARIABLE ASIG expresion                      {bison_log("%d = %s", 0, "assignement");};
+assignement: variable_asignacion ASIG expresion             {bison_log("%d = %s", 0, "assignement");
+															struct itemTabla * aAsignar = pilaPop();
+															struct itemTabla * variable = pilaPop();
+															if(variable->tipo!=aAsignar->tipo){
+																printf("Asignacion Invalida");
+																return;
+															}
+															
+															;
+															
+};
+
+variable_asignacion: VARIABLE {bison_log("%d = %s", 0, "variable_asignacion");
+								printf("nombre VARIABLE %s",$<str_val>1);
+								if(obtenerItemTabla($<str_val>1) == NO_EXISTE_EN_TABLA)
+								{
+									printf("La variable %s no fue declaradda",$<str_val>1);
+									return;
+								}
+								pilaPush(lectura);
+								
+};
 
 condition: expresion comparator expresion logic_operator expresion comparator expresion       {bison_log("%d = %s", 0, "condition");}
          | expresion comparator expresion                                                     {bison_log("%d = %s", 0, "condition");}
@@ -114,8 +182,20 @@ termino: termino MUL factor        {bison_log("%d = %s", 2, "termino");}
        | termino DIV factor        {bison_log("%d = %s", 2, "termino");}
        | factor                    {bison_log("%d = %s", 2, "termino");};
        
-factor: CONST_FLOAT                {bison_log("%d = %s", 2, "factor");}
-      | CONST_INTEGER              {bison_log("%d = %s", 2, "factor");}
+factor: CONST_FLOAT                {bison_log("%d = %s", 2, "factor");
+									struct itemTabla * var =malloc(sizeof(struct itemTabla));
+									sprintf( var->id,"%f", $<val>1 );
+									var->tipo = TIPO_FLOAT;
+									pilaPush(var);
+									insertarEnTabla(var);}
+      | CONST_INTEGER              {bison_log("%d = %s", 2, "factor");
+	  								struct itemTabla * var =malloc(sizeof(struct itemTabla));
+									sprintf( var->id,"%d", $<intval>1 );
+									var->tipo = TIPO_ENTERO;
+									pilaPush(var);
+									insertarEnTabla(var);
+									}
+									
       | VARIABLE                   {bison_log("%d = %s", 2, "factor");}
       | A_P expresion C_P          {bison_log("%d = %s", 2, "factor");};
           
@@ -126,17 +206,43 @@ list_declaracion: list_declaracion declaracion   {bison_log("%d = %s", 2, "list_
                 | declaracion                    {bison_log("%d = %s", 2, "list_declaracion");};
 
 declaracion: list_variable DOUBLE_POINTS FLOAT   {bison_log("%d = %s", 2, "declaracion");
+													while(isempty()==0){
+														struct itemTabla * var = pilaPop();
+														var->tipo = TIPO_FLOAT;
+														insertarEnTabla(var);
+														
+													}
+
+													}
+           | list_variable DOUBLE_POINTS STRING  {bison_log("%d = %s", 2, "declaracion");
+													while(isempty()==0){
+														struct itemTabla * var = pilaPop();
+														var->tipo = TIPO_STRING;
+														insertarEnTabla(var);
+														
+													}   
+													}
+           | list_variable DOUBLE_POINTS INTEGER {bison_log("%d = %s", 2, "declaracion");
+		   											while(isempty()==0){
+														struct itemTabla * var = pilaPop();
+														var->tipo = TIPO_ENTERO;
+														insertarEnTabla(var);
+														
+													} 	   
+													};
+          
+list_variable: VARIABLE COMMA list_variable      {bison_log("%d = %s", 2, "list_variable");
 													struct itemTabla * var =malloc(sizeof(struct itemTabla));
 													strcpy(var->id,$<str_val>1);
-													strcpy(var->valor,"");
-													var->tipo = TIPO_FLOAT;
-													insertarEnTabla(var);
-													printf("INSERTO EN TABLA LA VARIABLE %s",$<str_val>1);}
-           | list_variable DOUBLE_POINTS STRING  {bison_log("%d = %s", 2, "declaracion");}
-           | list_variable DOUBLE_POINTS INTEGER {bison_log("%d = %s", 2, "declaracion");};
-          
-list_variable: VARIABLE COMMA list_variable      {bison_log("%d = %s", 2, "list_variable");}
-             | VARIABLE                          {bison_log("%d = %s", 2, "list_variable");};
+													var->id[strlen(var->id)-(1+(top+1)*2)]='\0';						
+													pilaPush(var);
+													}
+             | VARIABLE                          {bison_log("%d = %s", 2, "list_variable");
+													struct itemTabla * var =malloc(sizeof(struct itemTabla));
+													strcpy(var->id,$<str_val>1);
+													var->id[strlen(var->id)-1]=0;						
+													pilaPush(var);
+													};
           
 
 %%
@@ -191,7 +297,7 @@ int insertarEnTabla(struct itemTabla* aInsertar){
 int obtenerItemTabla(char idABuscar[50]){
     //DEVUELVE CERO NO EXISTE
     //DEVUELVE UNO, LO ENCONTRO
-    struct itemTabla *lectura=malloc(sizeof(struct itemTabla));
+    lectura=malloc(sizeof(struct itemTabla));
     file= fopen(TABLA_SIMBOLOS, "rb");
     if (file != NULL) {
 
@@ -239,6 +345,8 @@ int actualizarItemTabla (struct itemTabla* aInsertar){
         return NO_EXISTE_EN_TABLA;
     }
 }
+
+
 
 
 

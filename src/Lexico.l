@@ -72,11 +72,6 @@ END_COMMENT               "/-"
 {NOT}                     {flex_log("[%s]", yytext); return NOT;}
 {ELSE}                    {flex_log("[%s]", yytext); return ELSE;}
 
-{NUM_INTEGER}             {flex_log("[ENTERO] %d", atoi(yytext));	yylval.intval = atoi(yytext); return CONST_INTEGER;}
-{NUM_FLOAT}               {flex_log("[REAL]   %f", atof(yytext));	yylval.val = atof(yytext); return CONST_FLOAT;}
-"\""{PHRASE}"\""          {flex_log("[STRING] %s", yytext);			yylval.str_val = yytext; return CONST_STRING;}
-({CHAR}|{NUM_INTEGER})+   {flex_log("[VARIABLE] %s", yytext);		yylval.str_val = yytext; return VARIABLE;}
-
 ":="                      {flex_log("[%s]", yytext); return ASIG;}
 "("                       {flex_log("[Abre parentesis]"); return A_P;}
 ")"                       {flex_log("[Cierra parentesis]"); return C_P;}
@@ -97,6 +92,13 @@ END_COMMENT               "/-"
 "<="                      {flex_log("[Menor o igual]"); return LE;}
 "=="                      {flex_log("[Igual]"); return EQ;}
 "!="                      {flex_log("[Distinto]"); return NE;}
+
+{NUM_INTEGER}             {flex_log("[ENTERO] %d", atoi(yytext));	yylval.intval = atoi(yytext); return CONST_INTEGER;}
+{NUM_FLOAT}               {flex_log("[REAL]   %f", atof(yytext));	yylval.val = atof(yytext); return CONST_FLOAT;}
+"\""{PHRASE}"\""          {flex_log("[STRING] %s", yytext);			yylval.str_val = yytext; return CONST_STRING;}
+({CHAR}|{NUM_INTEGER})+   {flex_log("[VARIABLE] %s", yytext);		yylval.str_val = yytext; return VARIABLE;}
+
+
 
 {INIT_COMMENT}            	{ BEGIN(C_COMMENT); }
 <C_COMMENT>{END_COMMENT} 	  { BEGIN(INITIAL); }

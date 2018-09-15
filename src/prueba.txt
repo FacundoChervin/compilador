@@ -1,5 +1,16 @@
--/ as as afwefg248090=)UF=) -/SAF  A/- safa  /- 
 DECVAR
-a:FLOAT
+a,b,c:FLOAT
+d,f:STRING
+g:INTEGER
 ENDDEC
-a:=25.5
+while(a == b){ -/No implementado/-
+	a:=25.0
+	if(b == c OR b==a){ -/No implementado/-
+		g := 15
+		write "Salida" -/No implementado/-
+	}
+	between(a,[2;3]) -/No implementado/-
+	AVG([2,3,4,5]) -/No implementado/-
+}
+
+
