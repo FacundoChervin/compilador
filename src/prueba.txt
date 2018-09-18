@@ -9,7 +9,7 @@ while(a == b){ -/No implementado/-
 		g := 15
 		write "Salida" -/No implementado/-
 	}
-	between(a,[2;3]) -/No implementado/-
+	between(a,[(2+3);(3+4)]) -/No implementado/-
 	AVG([2,3,4,5]) -/No implementado/-
 	
 	a:=3.0-a+(b*c-a)-32

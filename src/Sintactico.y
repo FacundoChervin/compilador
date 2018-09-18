@@ -141,7 +141,7 @@ while_statement: WHILE A_P condition C_P A_L list_statement C_L { bison_log("%s"
 if_statement: IF A_P condition C_P A_L list_statement C_L                             {bison_log("%s", "IF");}
             | IF A_P condition C_P A_L list_statement C_L ELSE A_L list_statement C_L {bison_log("%s", "IF");};
             
-assignement: variable_asignacion ASIG expresion {
+assignement: variable_no_terminal ASIG expresion {
   
                 bison_log("%s","ASIGNACION");
                 struct itemTabla * aAsignar = pilaPop();
@@ -176,9 +176,7 @@ assignement: variable_asignacion ASIG expresion {
                 }                             
               };
 
-variable_asignacion: VARIABLE {
-
-                        printf("Nombre VARIABLE %s\n",$<str_val>1);
+variable_no_terminal: VARIABLE {
                         if(obtenerItemTabla($<str_val>1) == NO_EXISTE_EN_TABLA)
                         {
                           printf("La variable %s no fue declarada\n",$<str_val>1);
@@ -191,7 +189,24 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
          | expresion comparator expresion                                                     {bison_log("%s", "CONDICION");}
          | NOT expresion                                                                      {bison_log("%s", "CONDICION");};
 
-between: BETWEEN A_P VARIABLE COMMA A_C expresion P_C expresion C_C C_P {bison_log("%s", "BETWEEN");};
+between: BETWEEN A_P variable_no_terminal COMMA A_C expresion P_C expresion C_C C_P {bison_log("%s", "BETWEEN");
+																	  struct itemTabla * varLimite2 = pilaPop();
+																	  struct itemTabla * varLimite1 = pilaPop();
+																	  struct itemTabla * varAComparar = pilaPop();
+																	  if(varLimite2->tipo == TIPO_STRING){
+																			printf("Operacion between no acepta variables TIPO_STRING\n");
+																			return;
+																	  }
+																	  if(varLimite1->tipo == TIPO_STRING){
+																			printf("Operacion between no acepta variables TIPO_STRING\n");
+																			return;
+																	  }
+																	  if(varAComparar->tipo == TIPO_STRING){
+																			printf("Operacion between no acepta variables TIPO_STRING\n");
+																			return;
+																	  }
+
+																		};
 
 average: AVG A_P A_C list_expresion C_C C_P {bison_log("%s", "AVERAGE");};
 
