@@ -3,14 +3,16 @@ a,b,c:FLOAT
 d,f:STRING
 g:INTEGER
 ENDDEC
-while(a == 3){ -/No implementado/-
+-/COMENTARIO1 -/COMENTARIO 2/- /-
+while(a == 3){ 
 	a:=25.0
-	if(f == d OR b<a){ -/No implementado/-
+	if(f == d OR b<a){ 
 		g := 15
-		write "Salida" -/No implementado/-
+		write "Salida" 
+		read a
 	}
-	between(a,[(2+3);(3+4)]) -/No implementado/-
-	AVG([2,3,4,5]) -/No implementado/-
+	between(a,[(2+3);(3+4)]) 
+	AVG([2,3,4,5]) 
 	
 	a:=3.0-a+(b*c-a)-32
 

@@ -30,6 +30,8 @@ FILE * file;
 struct itemTabla *lectura;      
 struct itemTabla* stack[MAXSIZEPILA];     
 int top = -1;      
+int cantidadEnAvg = 0;      
+
 
 void bison_log(const char* msg, ...) {
   
@@ -106,7 +108,7 @@ char *str_val;
 
 %%
 
-start: program {bison_log("%s", "Compilacion completa");}
+start: program {bison_log("%s", "Compilacion completa");printf("\n\n pila %d",top);}
 
 program: list_statement                           
        | area_declaracion list_statement          
@@ -239,9 +241,10 @@ between: BETWEEN A_P variable_no_terminal COMMA A_C expresion P_C expresion C_C 
 
 																		};
 
-average: AVG A_P A_C list_expresion C_C C_P {bison_log("%s", "AVERAGE");
-												while(isempty()==0){
+average: AVG A_P A_C list_expresion_avg C_C C_P {bison_log("%s", "AVERAGE");
+												while(cantidadEnAvg !=0){
 													struct itemTabla * variable = pilaPop();
+													cantidadEnAvg--;
 													if(variable->tipo == TIPO_STRING){
 															printf("Operacion avg no acepta variables TIPO_STRING\n");
 															return;
@@ -251,8 +254,8 @@ average: AVG A_P A_C list_expresion C_C C_P {bison_log("%s", "AVERAGE");
 					
 					};
 
-list_expresion: expresion COMMA list_expresion
-              | expresion ;	
+list_expresion_avg: expresion COMMA list_expresion_avg {cantidadEnAvg++;}
+              | expresion {cantidadEnAvg++;};
 
 expresion: expresion SUM termino   {
 
