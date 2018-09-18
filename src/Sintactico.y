@@ -144,7 +144,29 @@ assignement: variable_asignacion ASIG expresion             {bison_log("%d = %s"
 															struct itemTabla * aAsignar = pilaPop();
 															struct itemTabla * variable = pilaPop();
 															if(variable->tipo!=aAsignar->tipo){
-																printf("Asignacion Invalida");
+																printf("Asignacion Invalida\n");
+																char tipo1[50];
+																char tipo2[50];
+																if(variable->tipo == TIPO_ENTERO){
+																	strcpy(tipo1,"TIPO_ENTERO");
+																}
+																if(variable->tipo == TIPO_FLOAT){
+																	strcpy(tipo1,"TIPO_FLOAT");
+																}
+																if(variable->tipo == TIPO_STRING){
+																	strcpy(tipo1,"TIPO_STRING");
+																}
+																if(aAsignar->tipo == TIPO_ENTERO){
+																	strcpy(tipo2,"TIPO_ENTERO");
+																}
+																if(aAsignar->tipo == TIPO_FLOAT){
+																	strcpy(tipo2,"TIPO_FLOAT");
+																}
+																if(aAsignar->tipo == TIPO_STRING){
+																	strcpy(tipo2,"TIPO_STRING");
+																}
+																printf("Tipos incompatibles %s con %s\n",&tipo1,&tipo2);
+																
 																return;
 															}
 															
@@ -174,12 +196,88 @@ average: AVG A_P A_C list_expresion C_C C_P {bison_log("%d = %s", 2, "average");
 list_expresion: expresion COMMA list_expresion  {bison_log("%d = %s", 2, "list_expresion");}
               | expresion                       {bison_log("%d = %s", 2, "list_expresion");};
 
-expresion: expresion SUM termino   {bison_log("%d = %s", 2, "expresion");}
-         | expresion MINUS termino {bison_log("%d = %s", 2, "expresion");}
+expresion: expresion SUM termino   {bison_log("%d = %s", 2, "expresion");
+									struct itemTabla * variable1 = pilaPop();
+									struct itemTabla * variable2 = pilaPop();
+									struct itemTabla * var =malloc(sizeof(struct itemTabla));
+									if(variable1->tipo == TIPO_STRING){
+										printf("Operacion (+) Invalida para TIPO_STRING");
+										return;
+									}
+									if(variable2->tipo == TIPO_STRING){
+										printf("Operacion (+) Invalida para TIPO_STRING");
+										return;
+									}
+									if(variable1->tipo == TIPO_FLOAT || variable2->tipo == TIPO_FLOAT){
+										strcpy(var->id,"VariableFloatAux");
+										var->tipo=TIPO_FLOAT;
+										pilaPush(var);
+									}else{
+										strcpy(var->id,"VariableEnteroAux");
+										var->tipo=TIPO_ENTERO;
+										pilaPush(var);									
+									}
+
+									}
+         | expresion MINUS termino {bison_log("%d = %s", 2, "expresion");
+									struct itemTabla * variable1 = pilaPop();
+									struct itemTabla * variable2 = pilaPop();
+									struct itemTabla * var =malloc(sizeof(struct itemTabla));
+									if(variable1->tipo == TIPO_STRING){
+										printf("Operacion (-) Invalida para TIPO_STRING");
+										return;
+									}
+									if(variable2->tipo == TIPO_STRING){
+										printf("Operacion (-) Invalida para TIPO_STRING");
+										return;
+									}
+									if(variable1->tipo == TIPO_FLOAT || variable2->tipo == TIPO_FLOAT){
+										strcpy(var->id,"VariableFloatAux");
+										var->tipo=TIPO_FLOAT;
+										pilaPush(var);
+									}else{
+										strcpy(var->id,"VariableEnteroAux");
+										var->tipo=TIPO_ENTERO;
+										pilaPush(var);									
+									}}
          | termino                 {bison_log("%d = %s", 2, "expresion");};
          
-termino: termino MUL factor        {bison_log("%d = %s", 2, "termino");}
-       | termino DIV factor        {bison_log("%d = %s", 2, "termino");}
+termino: termino MUL factor        {bison_log("%d = %s", 2, "termino");
+									struct itemTabla * variable1 = pilaPop();
+									struct itemTabla * variable2 = pilaPop();
+									struct itemTabla * var =malloc(sizeof(struct itemTabla));
+									if(variable1->tipo == TIPO_STRING){
+										printf("Operacion (*) Invalida para TIPO_STRING");
+										return;
+									}
+									if(variable2->tipo == TIPO_STRING){
+										printf("Operacion (*) Invalida para TIPO_STRING");
+										return;
+									}
+									if(variable1->tipo == TIPO_FLOAT || variable2->tipo == TIPO_FLOAT){
+										strcpy(var->id,"VariableFloatAux");
+										var->tipo=TIPO_FLOAT;
+										pilaPush(var);
+									}else{
+										strcpy(var->id,"VariableEnteroAux");
+										var->tipo=TIPO_ENTERO;
+										pilaPush(var);									
+									}}
+       | termino DIV factor        {bison_log("%d = %s", 2, "termino");
+									struct itemTabla * variable1 = pilaPop();
+									struct itemTabla * variable2 = pilaPop();
+									struct itemTabla * var =malloc(sizeof(struct itemTabla));
+									if(variable1->tipo == TIPO_STRING){
+										printf("Operacion (/) Invalida para TIPO_STRING");
+										return;
+									}
+									if(variable2->tipo == TIPO_STRING){
+										printf("Operacion (/) Invalida para TIPO_STRING");
+										return;
+									}
+									strcpy(var->id,"VariableFloatAux");
+									var->tipo=TIPO_FLOAT;
+									pilaPush(var); }
        | factor                    {bison_log("%d = %s", 2, "termino");};
        
 factor: CONST_FLOAT                {bison_log("%d = %s", 2, "factor");
@@ -196,7 +294,15 @@ factor: CONST_FLOAT                {bison_log("%d = %s", 2, "factor");
 									insertarEnTabla(var);
 									}
 									
-      | VARIABLE                   {bison_log("%d = %s", 2, "factor");}
+      | VARIABLE                   {bison_log("%d = %s", 2, "factor");
+									if(obtenerItemTabla($<str_val>1) == NO_EXISTE_EN_TABLA)
+									{
+										printf("La variable %s no fue declarada",$<str_val>1);
+										return;
+									}
+									pilaPush(lectura);
+									
+									}
       | A_P expresion C_P          {bison_log("%d = %s", 2, "factor");};
           
           

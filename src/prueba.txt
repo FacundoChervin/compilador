@@ -11,6 +11,9 @@ while(a == b){ -/No implementado/-
 	}
 	between(a,[2;3]) -/No implementado/-
 	AVG([2,3,4,5]) -/No implementado/-
+	
+	a:=3.0-a+(b*c-a)-32
+
 }
 
 
