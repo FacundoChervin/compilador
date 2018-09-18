@@ -185,9 +185,40 @@ variable_no_terminal: VARIABLE {
                         pilaPush(lectura);                
                       };
 
-condition: expresion comparator expresion logic_operator expresion comparator expresion       {bison_log("%s", "CONDICION");}
-         | expresion comparator expresion                                                     {bison_log("%s", "CONDICION");}
-         | NOT expresion                                                                      {bison_log("%s", "CONDICION");};
+condition: expresion comparator expresion logic_operator expresion comparator expresion       {
+																			bison_log("%s", "CONDICION");
+																			struct itemTabla * varCondicion2 = pilaPop();
+																			struct itemTabla * varCondicion1 = pilaPop();		
+																			if(varCondicion1->tipo == TIPO_STRING || varCondicion2->tipo == TIPO_STRING){
+																				if(varCondicion1->tipo != varCondicion2->tipo){
+																					printf("Comparacion no valida, TIPO_STRING con variable no TIPO_STRING\n");
+																					return;
+																				}
+																			}
+																			
+																			varCondicion2 = pilaPop();
+																			varCondicion1 = pilaPop();		
+																			if(varCondicion1->tipo == TIPO_STRING || varCondicion2->tipo == TIPO_STRING){
+																				if(varCondicion1->tipo != varCondicion2->tipo){
+																					printf("Comparacion no valida, TIPO_STRING con variable no TIPO_STRING\n");
+																					return;
+																				}
+																			}
+																			
+																								}
+         | expresion comparator expresion                                                     {bison_log("%s", "CONDICION");
+																			struct itemTabla * varCondicion2 = pilaPop();
+																			struct itemTabla * varCondicion1 = pilaPop();		
+																			if(varCondicion1->tipo == TIPO_STRING || varCondicion2->tipo == TIPO_STRING){
+																				if(varCondicion1->tipo != varCondicion2->tipo){
+																					printf("Comparacion no valida, TIPO_STRING con variable no TIPO_STRING\n");
+																					return;
+																				}
+																			}
+																								}
+         | NOT expresion                                                                      {bison_log("%s", "CONDICION");
+																							//No valido nada
+																							pilaPop();};
 
 between: BETWEEN A_P variable_no_terminal COMMA A_C expresion P_C expresion C_C C_P {bison_log("%s", "BETWEEN");
 																	  struct itemTabla * varLimite2 = pilaPop();
@@ -208,10 +239,20 @@ between: BETWEEN A_P variable_no_terminal COMMA A_C expresion P_C expresion C_C 
 
 																		};
 
-average: AVG A_P A_C list_expresion C_C C_P {bison_log("%s", "AVERAGE");};
+average: AVG A_P A_C list_expresion C_C C_P {bison_log("%s", "AVERAGE");
+												while(isempty()==0){
+													struct itemTabla * variable = pilaPop();
+													if(variable->tipo == TIPO_STRING){
+															printf("Operacion avg no acepta variables TIPO_STRING\n");
+															return;
+													}
+													
+												}
+					
+					};
 
 list_expresion: expresion COMMA list_expresion
-              | expresion;
+              | expresion ;	
 
 expresion: expresion SUM termino   {
 

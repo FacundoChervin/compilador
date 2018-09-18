@@ -3,9 +3,9 @@ a,b,c:FLOAT
 d,f:STRING
 g:INTEGER
 ENDDEC
-while(a == b){ -/No implementado/-
+while(a == 3){ -/No implementado/-
 	a:=25.0
-	if(b == c OR b==a){ -/No implementado/-
+	if(f == d OR b<a){ -/No implementado/-
 		g := 15
 		write "Salida" -/No implementado/-
 	}
