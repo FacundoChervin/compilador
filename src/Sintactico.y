@@ -108,7 +108,7 @@ char *str_val;
 
 %%
 
-start: program {bison_log("%s", "Compilacion completa");printf("\n\n pila %d",top);}
+start: program {bison_log("%s", "Compilacion completa");}
 
 program: list_statement                           
        | area_declaracion list_statement          
@@ -174,7 +174,7 @@ assignement: variable_no_terminal ASIG expresion {
                   }
                   printf("Tipos incompatibles %s con %s\n",&tipo1,&tipo2);
                                 
-                  return;
+                  exit(0);
                 }                             
               };
 
@@ -182,7 +182,7 @@ variable_no_terminal: VARIABLE {
                         if(obtenerItemTabla($<str_val>1) == NO_EXISTE_EN_TABLA)
                         {
                           printf("La variable %s no fue declarada\n",$<str_val>1);
-                          return;
+                          exit(0);
                         }
                         pilaPush(lectura);                
                       };
@@ -194,7 +194,7 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
 																			if(varCondicion1->tipo == TIPO_STRING || varCondicion2->tipo == TIPO_STRING){
 																				if(varCondicion1->tipo != varCondicion2->tipo){
 																					printf("Comparacion no valida, TIPO_STRING con variable no TIPO_STRING\n");
-																					return;
+																					exit(0);
 																				}
 																			}
 																			
@@ -203,7 +203,7 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
 																			if(varCondicion1->tipo == TIPO_STRING || varCondicion2->tipo == TIPO_STRING){
 																				if(varCondicion1->tipo != varCondicion2->tipo){
 																					printf("Comparacion no valida, TIPO_STRING con variable no TIPO_STRING\n");
-																					return;
+																					exit(0);
 																				}
 																			}
 																			
@@ -214,7 +214,7 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
 																			if(varCondicion1->tipo == TIPO_STRING || varCondicion2->tipo == TIPO_STRING){
 																				if(varCondicion1->tipo != varCondicion2->tipo){
 																					printf("Comparacion no valida, TIPO_STRING con variable no TIPO_STRING\n");
-																					return;
+																					exit(0);
 																				}
 																			}
 																								}
@@ -228,15 +228,15 @@ between: BETWEEN A_P variable_no_terminal COMMA A_C expresion P_C expresion C_C 
 																	  struct itemTabla * varAComparar = pilaPop();
 																	  if(varLimite2->tipo == TIPO_STRING){
 																			printf("Operacion between no acepta variables TIPO_STRING\n");
-																			return;
+																			exit(0);
 																	  }
 																	  if(varLimite1->tipo == TIPO_STRING){
 																			printf("Operacion between no acepta variables TIPO_STRING\n");
-																			return;
+																			exit(0);
 																	  }
 																	  if(varAComparar->tipo == TIPO_STRING){
 																			printf("Operacion between no acepta variables TIPO_STRING\n");
-																			return;
+																			exit(0);
 																	  }
 
 																		};
@@ -247,7 +247,7 @@ average: AVG A_P A_C list_expresion_avg C_C C_P {bison_log("%s", "AVERAGE");
 													cantidadEnAvg--;
 													if(variable->tipo == TIPO_STRING){
 															printf("Operacion avg no acepta variables TIPO_STRING\n");
-															return;
+															exit(0);
 													}
 													
 												}
@@ -264,11 +264,11 @@ expresion: expresion SUM termino   {
                   struct itemTabla * var =malloc(sizeof(struct itemTabla));
                   if(variable1->tipo == TIPO_STRING){
                     printf("Operacion (+) Invalida para TIPO_STRING\n");
-                    return;
+                    exit(0);
                   }
                   if(variable2->tipo == TIPO_STRING){
                     printf("Operacion (+) Invalida para TIPO_STRING\n");
-                    return;
+                    exit(0);
                   }
                   if(variable1->tipo == TIPO_FLOAT || variable2->tipo == TIPO_FLOAT){
                     strcpy(var->id,"VariableFloatAux");
@@ -289,11 +289,11 @@ expresion: expresion SUM termino   {
                   struct itemTabla * var =malloc(sizeof(struct itemTabla));
                   if(variable1->tipo == TIPO_STRING){
                     printf("Operacion (-) Invalida para TIPO_STRING\n");
-                    return;
+                    exit(0);
                   }
                   if(variable2->tipo == TIPO_STRING){
                     printf("Operacion (-) Invalida para TIPO_STRING\n");
-                    return;
+                    exit(0);
                   }
                   if(variable1->tipo == TIPO_FLOAT || variable2->tipo == TIPO_FLOAT){
                     strcpy(var->id,"VariableFloatAux");
@@ -315,11 +315,11 @@ termino: termino MUL factor {
                   struct itemTabla * var =malloc(sizeof(struct itemTabla));
                   if(variable1->tipo == TIPO_STRING){
                     printf("Operacion (*) Invalida para TIPO_STRING\n");
-                    return;
+                    exit(0);
                   }
                   if(variable2->tipo == TIPO_STRING){
                     printf("Operacion (*) Invalida para TIPO_STRING\n");
-                    return;
+                    exit(0);
                   }
                   if(variable1->tipo == TIPO_FLOAT || variable2->tipo == TIPO_FLOAT){
                     strcpy(var->id,"VariableFloatAux");
@@ -338,11 +338,11 @@ termino: termino MUL factor {
                   struct itemTabla * var =malloc(sizeof(struct itemTabla));
                   if(variable1->tipo == TIPO_STRING){
                     printf("Operacion (/) Invalida para TIPO_STRING\n");
-                    return;
+                    exit(0);
                   }
                   if(variable2->tipo == TIPO_STRING){
                     printf("Operacion (/) Invalida para TIPO_STRING\n");
-                    return;
+                    exit(0);
                   }
                   strcpy(var->id,"VariableFloatAux");
                   var->tipo=TIPO_FLOAT;
@@ -373,7 +373,7 @@ factor: CONST_FLOAT {
                   if(obtenerItemTabla($<str_val>1) == NO_EXISTE_EN_TABLA)
                   {
                     printf("La variable %s no fue declarada\n",$<str_val>1);
-                    return;
+                    exit(0);
                   }
                   pilaPush(lectura);
                   
