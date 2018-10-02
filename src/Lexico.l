@@ -4,8 +4,63 @@
 #include <conio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 #include "y.tab.h"
 FILE  *yyin;
+
+void yyerror(char*);
+
+int my_atoi(const char *c) {
+  
+    int value = 0;
+    int sign = 1;
+    if( *c == '-' )
+    {
+        if( *c == '-' ) sign = -1;
+        c++;
+    }
+    while (isdigit(*c))
+    {
+        value *= 10;
+        value += (int) (*c-'0');
+        c++;
+    }
+    return (value * sign);
+}
+
+double my_atof(const char* s){
+  
+  double value = 0, fact = 1;
+  int point_seen = 0;
+    
+  if (*s == '-'){
+    s++;
+    fact = -1;
+  }
+  
+  while (isdigit(*s) || *s == '.') {
+    
+    if (*s == '.'){
+      
+      point_seen = 1;
+      continue;
+    }
+    
+    if (point_seen == 1) {
+
+      value /= 10;
+    
+    } else {
+      
+      value *= 10;
+    }
+    value += (int) (*s-'0');
+    s++;
+  }  
+  
+  return value * fact;
+}
+
 
 void flex_log(const char* msg, ...) {
   
@@ -50,6 +105,7 @@ NUM_INTEGER               [0-9]+
 NUM_FLOAT                 ([0-9]+"."[0-9]*)|([0-9]*"."[0-9]+)
 PHRASE                    (.)+
 CHAR                      [A-Za-z]
+NEG                       "-"
 
 INIT_COMMENT              "-/"
 END_COMMENT               "/-"
@@ -93,10 +149,10 @@ END_COMMENT               "/-"
 "=="                      {flex_log("[Igual]"); return EQ;}
 "!="                      {flex_log("[Distinto]"); return NE;}
 
-{NUM_INTEGER}             {flex_log("[ENTERO] %d", atoi(yytext));	yylval.intval = atoi(yytext); return CONST_INTEGER;}
-{NUM_FLOAT}               {flex_log("[REAL]   %f", atof(yytext));	yylval.val = atof(yytext); return CONST_FLOAT;}
-"\""{PHRASE}"\""          {flex_log("[STRING] %s", yytext);			yylval.str_val = yytext; return CONST_STRING;}
-({CHAR}|{NUM_INTEGER})+   {flex_log("[VARIABLE] %s", yytext);		yylval.str_val = yytext; return VARIABLE;}
+{NUM_INTEGER}                   {flex_log("[ENTERO] %d", my_atoi(yytext));	yylval.intval = my_atoi(yytext); return CONST_INTEGER;}
+{NUM_FLOAT}                     {flex_log("[REAL]   %f", my_atof(yytext));	yylval.val = my_atof(yytext); return CONST_FLOAT;}
+"\""{PHRASE}"\""                {flex_log("[STRING] %s", yytext);			yylval.str_val = yytext; return CONST_STRING;}
+({CHAR}|{NUM_INTEGER}){1,32}    {flex_log("[VARIABLE] %s", yytext);		yylval.str_val = yytext; return VARIABLE;}
 
 
 
@@ -110,5 +166,11 @@ END_COMMENT               "/-"
 <C_COMMENT_2>.    			    { }
 <C_COMMENT_2>{END_COMMENT} 	{ BEGIN(C_COMMENT); }
 
+
+
 "\n"
 "\t"
+"\r\n"
+" "
+
+.                           { printf("Caracter invalido!");  exit(1);}

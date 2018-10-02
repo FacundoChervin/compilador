@@ -32,6 +32,11 @@ struct itemTabla* stack[MAXSIZEPILA];
 int top = -1;      
 int cantidadEnAvg = 0;      
 
+int insertarEnTabla(struct itemTabla*);
+int obtenerItemTabla(char [50]);
+
+int yylex();
+int yyerror();
 
 void bison_log(const char* msg, ...) {
   
@@ -138,11 +143,26 @@ comparator: GT
 logic_operator: AND           
               | OR;
 
-while_statement: WHILE A_P condition C_P A_L list_statement C_L { bison_log("%s", "WHILE"); };
+              
+while_statement: while_header while_body;              
+              
+while_header: WHILE A_P condition C_P { bison_log("%s", "WHILE"); };
+               
+while_body: A_L list_statement C_L
+          | A_L C_L;
 
-if_statement: IF A_P condition C_P A_L list_statement C_L                             {bison_log("%s", "IF");}
-            | IF A_P condition C_P A_L list_statement C_L ELSE A_L list_statement C_L {bison_log("%s", "IF");};
-            
+
+if_statement: if_header {bison_log("%s", "IF");} if_body; 
+         
+if_header: IF A_P condition C_P;
+
+if_body: if_struct
+       | if_struct ELSE if_struct;
+         
+if_struct: A_L list_statement C_L                               
+         | A_L C_L;
+
+         
 assignement: variable_no_terminal ASIG expresion {
   
                 bison_log("%s","ASIGNACION");
@@ -220,7 +240,10 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
 																								}
          | NOT expresion                                                                      {bison_log("%s", "CONDICION");
 																							//No valido nada
-																							pilaPop();};
+																							pilaPop();}
+                                              
+         | between
+         | NOT between;
 
 between: BETWEEN A_P variable_no_terminal COMMA A_C expresion P_C expresion C_C C_P {bison_log("%s", "BETWEEN");
 																	  struct itemTabla * varLimite2 = pilaPop();
