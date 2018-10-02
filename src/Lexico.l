@@ -32,17 +32,19 @@ double my_atof(const char* s){
   
   double value = 0, fact = 1;
   int point_seen = 0;
+  const char* aux = s;
     
-  if (*s == '-'){
-    s++;
+  if (*aux == '-'){
+    aux++;
     fact = -1;
   }
   
-  while (isdigit(*s) || *s == '.') {
+  while (isdigit(*aux) || *aux == '.' || *aux != '\0') {
     
-    if (*s == '.'){
+    if (*aux == '.'){
       
       point_seen = 1;
+      aux++;
       continue;
     }
     
@@ -54,8 +56,10 @@ double my_atof(const char* s){
       
       value *= 10;
     }
-    value += (int) (*s-'0');
-    s++;
+    
+    value += (int) (*aux-'0');
+    aux++;
+    
   }  
   
   return value * fact;
@@ -166,11 +170,9 @@ END_COMMENT               "/-"
 <C_COMMENT_2>.    			    { }
 <C_COMMENT_2>{END_COMMENT} 	{ BEGIN(C_COMMENT); }
 
-
-
+" "
 "\n"
 "\t"
 "\r\n"
-" "
 
 .                           { printf("Caracter invalido!");  exit(1);}
