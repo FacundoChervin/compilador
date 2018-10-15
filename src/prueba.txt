@@ -1,18 +1,9 @@
 DECVAR
-a,b,c:INTEGER
+a,b,c:FLOAT
 d,f:STRING
-g,h:FLOAT
+g:INTEGER
 ENDDEC
 -/COMENTARIO1 -/COMENTARIO 2/- /-
-while(a == 3){ 
-	a:=2115.1111
-	if(f == d OR b<a){ 
-		g := 15
-		write "Salida" 
-		read a
-	}
-	between(a,[(2*3);(3+4)]) 
-	AVG([2,3,4,5]) 
-	
-	a:=3.0-a+(b*c-a)-32
+while(a <= b OR a  == 3){
+a:=3.0
 }

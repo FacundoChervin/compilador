@@ -10,62 +10,6 @@ FILE  *yyin;
 
 void yyerror(char*);
 
-int my_atoi(const char *c) {
-  
-    int value = 0;
-    int sign = 1;
-    if( *c == '-' )
-    {
-        if( *c == '-' ) sign = -1;
-        c++;
-    }
-    while (isdigit(*c))
-    {
-        value *= 10;
-        value += (int) (*c-'0');
-        c++;
-    }
-    return (value * sign);
-}
-
-double my_atof(const char* s){
-  
-  double value = 0, fact = 1;
-  int point_seen = 0;
-  const char* aux = s;
-    
-  if (*aux == '-'){
-    aux++;
-    fact = -1;
-  }
-  
-  while (isdigit(*aux) || *aux == '.' || *aux != '\0') {
-    
-    if (*aux == '.'){
-      
-      point_seen = 1;
-      aux++;
-      continue;
-    }
-    
-    if (point_seen == 1) {
-
-      value /= 10;
-    
-    } else {
-      
-      value *= 10;
-    }
-    
-    value += (int) (*aux-'0');
-    aux++;
-    
-  }  
-  
-  return value * fact;
-}
-
-
 void flex_log(const char* msg, ...) {
   
   va_list arglist;
@@ -153,8 +97,8 @@ END_COMMENT               "/-"
 "=="                      {flex_log("[Igual]"); return EQ;}
 "!="                      {flex_log("[Distinto]"); return NE;}
 
-{NUM_INTEGER}                   {flex_log("[ENTERO] %d", my_atoi(yytext));	yylval.intval = my_atoi(yytext); return CONST_INTEGER;}
-{NUM_FLOAT}                     {flex_log("[REAL]   %f", my_atof(yytext));	yylval.val = my_atof(yytext); return CONST_FLOAT;}
+{NUM_INTEGER}                   {flex_log("[ENTERO] %d", atoi(yytext));	yylval.intval = atoi(yytext); return CONST_INTEGER;}
+{NUM_FLOAT}                     {flex_log("[REAL]   %f", atof(yytext));	yylval.val = atof(yytext); return CONST_FLOAT;}
 "\""{PHRASE}"\""                {flex_log("[STRING] %s", yytext);			yylval.str_val = yytext; return CONST_STRING;}
 ({CHAR}|{NUM_INTEGER}){1,32}    {flex_log("[VARIABLE] %s", yytext);		yylval.str_val = yytext; return VARIABLE;}
 
