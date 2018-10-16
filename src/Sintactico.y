@@ -133,7 +133,7 @@ logic_operator: AND  {operadorlogico ="AND";}
               | OR   {operadorlogico ="OR";};
 
 while_statement:  WHILE { pilaPushInicioWhile(topPolaca+1); } 
-                  A_P condition C_P A_L { confirmarPunteroPila(topPolaca+2);pilaPushPolaca("BI");pilaPushIndice(topPolaca); } 
+                  A_P condition C_P A_L { confirmarPunteroPila(topPolaca+2);pilaPushPolaca("JMP ");pilaPushIndice(topPolaca); } 
                   list_statement 
                   {
                     char* aux = malloc(sizeof(char) * 1024);
@@ -147,7 +147,7 @@ while_statement:  WHILE { pilaPushInicioWhile(topPolaca+1); }
                   };
 
 
-if_statement: if_header { bison_log("%s", "IF"); pilaPushPolaca("BI"); confirmarPunteroPila(topPolaca+1); pilaPushIndice(topPolaca); } 
+if_statement: if_header { bison_log("%s", "IF"); pilaPushPolaca("JMP "); confirmarPunteroPila(topPolaca+1); pilaPushIndice(topPolaca); } 
               if_body 
               {
                 confirmarPunteroPila(topPolaca+1);
@@ -160,7 +160,7 @@ if_body: if_struct
          {
             confirmarPunteroPila(topPolaca+2);
 
-            pilaPushPolaca("JMP");
+            pilaPushPolaca("JMP ");
             pilaPushIndice(topPolaca);
             
          } if_struct;
@@ -171,7 +171,9 @@ if_struct: A_L list_statement C_L
 assignement:  variable_no_terminal ASIG CONST_STRING {
         
                   struct itemTabla * var = malloc(sizeof(struct itemTabla));
-                  sprintf( var->id,"%s", $<intval>3 );
+				  $<str_val>3[strlen($<str_val>3)-1] = '\0';
+				  $<str_val>3++;
+                  sprintf( var->id,"%s", $<str_val>3 );
                   strcpy(var->valor," ");
                   var->tipo = TIPO_STRING;
                   pilaPushValidacion(var);
@@ -261,44 +263,44 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
 																			}
 																			
 																				if(strcmp(comparador,"EQ") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BNE"); //pilaPushPolaca("BRANCH IF ZERO ");
+																					pilaPushPolaca("BNE "); //pilaPushPolaca("BRANCH IF ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"NE") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BEQ"); //pilaPushPolaca("BRANCH IF NOT ZERO ");
+																					pilaPushPolaca("BEQ "); //pilaPushPolaca("BRANCH IF NOT ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"GT") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BLT");//pilaPushPolaca("BRANCH IF GREATER THAN ZERO ");
+																					pilaPushPolaca("BLT ");//pilaPushPolaca("BRANCH IF GREATER THAN ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"LT") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BGE");//pilaPushPolaca("BRANCH IF LESS THAN ZERO ");
+																					pilaPushPolaca("BGE ");//pilaPushPolaca("BRANCH IF LESS THAN ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"GE") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BLT");//pilaPushPolaca("BRANCH IF GREATER OR ZERO ");
+																					pilaPushPolaca("BLT ");//pilaPushPolaca("BRANCH IF GREATER OR ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"LE") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BGT");//pilaPushPolaca("BRANCH IF LESS OR ZERO ");
+																					pilaPushPolaca("BGT ");//pilaPushPolaca("BRANCH IF LESS OR ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
@@ -317,44 +319,44 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
 																			
 																			}
 																				if(strcmp(comparador,"EQ") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BNE");//pilaPushPolaca("BRANCH IF ZERO ");
+																					pilaPushPolaca("BNE ");//pilaPushPolaca("BRANCH IF ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"NE") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BEQ");//pilaPushPolaca("BRANCH IF NOT ZERO ");
+																					pilaPushPolaca("BEQ ");//pilaPushPolaca("BRANCH IF NOT ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"GT") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BLE");//pilaPushPolaca("BRANCH IF GREATER THAN ZERO ");
+																					pilaPushPolaca("BLE ");//pilaPushPolaca("BRANCH IF GREATER THAN ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"LT") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BGE");//pilaPushPolaca("BRANCH IF LESS THAN ZERO ");
+																					pilaPushPolaca("BGE ");//pilaPushPolaca("BRANCH IF LESS THAN ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"GE") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BLT");//pilaPushPolaca("BRANCH IF GREATER OR ZERO ");
+																					pilaPushPolaca("BLT ");//pilaPushPolaca("BRANCH IF GREATER OR ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"LE") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BGT");//pilaPushPolaca("BRANCH IF LESS OR ZERO ");
+																					pilaPushPolaca("BGT ");//pilaPushPolaca("BRANCH IF LESS OR ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
@@ -372,44 +374,44 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
 																			
 																			}
 																				if(strcmp(comparador,"EQ") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BNE");//pilaPushPolaca("BRANCH IF NOT ZERO ");
+																					pilaPushPolaca("BEQ ");//pilaPushPolaca("BRANCH IF NOT ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"NE") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BEQ");//pilaPushPolaca("BRANCH IF ZERO ");
+																					pilaPushPolaca("BNE ");//pilaPushPolaca("BRANCH IF ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"GT") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BLE");//pilaPushPolaca("BRANCH IF LESS OR ZERO ");
+																					pilaPushPolaca("BGT ");//pilaPushPolaca("BRANCH IF LESS OR ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"LT") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BGE");//pilaPushPolaca("BRANCH IF GREATER OR ZERO ");
+																					pilaPushPolaca("BLT ");//pilaPushPolaca("BRANCH IF GREATER OR ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"GE") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BLT");//pilaPushPolaca("BRANCH IF LESS THAN ZERO ");
+																					pilaPushPolaca("BGE ");//pilaPushPolaca("BRANCH IF LESS THAN ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"LE") == 0){
-																					pilaPushPolaca("-");
+																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BGT");//pilaPushPolaca("BRANCH IF GREATER THAN ZERO ");
+																					pilaPushPolaca("BLE ");//pilaPushPolaca("BRANCH IF GREATER THAN ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
@@ -418,7 +420,7 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
 																							//No valido nada
 																				pilaPopValidacion();
 																				pilaPushPolaca("CMP");
-																				pilaPushPolaca("BGT");//pilaPushPolaca("BRANCH GREATER THAN ZERO ");
+																				pilaPushPolaca("BGT ");//pilaPushPolaca("BRANCH GREATER THAN ZERO ");
 																				pilaPushIndice(topPolaca);
 																							
 																							};
@@ -996,7 +998,7 @@ void guardarPolaca() {
   if (f) {
 
     for(i = 0; i <= topPolaca; i++){
-      fprintf(f, "%s ", stackPolaca[i]);
+      fprintf(f, "%d : %s \n",i, stackPolaca[i]);
     } 
   
   }

@@ -4,7 +4,7 @@ d,f:STRING
 g:INTEGER
 ENDDEC
 -/COMENTARIO1 -/COMENTARIO 2/- /-
-while(a <= b OR g  == 3){
+while(a <= b){
 a:=             0.01
 b        := -1.213
 b := 0.12313
