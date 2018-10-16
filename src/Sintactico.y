@@ -17,7 +17,7 @@
 
 #define MAXSIZEPILA 500
 #define TABLA_SIMBOLOS "ts.txt"
-#define ARCHIVO_CODIGO_INTERMEDIO "codigo_intermedio.txt"
+#define ARCHIVO_CODIGO_INTERMEDIO "intermedia.txt"
 
 int yystopparser=0;
 FILE  *yyin;
@@ -168,9 +168,32 @@ if_body: if_struct
 if_struct: A_L list_statement C_L                               
          | A_L C_L;
 
-assignement:  variable_no_terminal ASIG expresion {
+assignement:  variable_no_terminal ASIG CONST_STRING {
+        
+                  struct itemTabla * var = malloc(sizeof(struct itemTabla));
+                  sprintf( var->id,"%s", $<intval>3 );
+                  strcpy(var->valor," ");
+                  var->tipo = TIPO_STRING;
+                  pilaPushValidacion(var);
+                  insertarEnTabla(var);
+				  
+                  pilaPushPolaca(var->id);
+
+                  bison_log("%s", "ASIGNACION DE VAR STRING");
+                  struct itemTabla * aAsignar = pilaPopValidacion();
+                  if(TIPO_STRING != aAsignar->tipo){
+                    
+                    printf("Error en asignacion a una variable string\n");
+                                  
+                    exit(1);
+                  }  
+                
+                  pilaPushPolaca(":=");                  
+            }
+            |
+              variable_no_terminal ASIG expresion {
   
-                bison_log("%s","ASIGNACION");
+                bison_log("%s", "ASIGNACION");
                 struct itemTabla * aAsignar = pilaPopValidacion();
                 struct itemTabla * variable = pilaPopValidacion();
                               
@@ -178,27 +201,25 @@ assignement:  variable_no_terminal ASIG expresion {
                   
                   printf("Asignacion Invalida\n");
                   
-                  printf("aaa %s %s %d\n", variable->id, variable->valor, variable->tipo);
-                  
-                   char tipo1[50];
-                   char tipo2[50];
-                   if(variable->tipo == TIPO_ENTERO){
-                     strcpy(tipo1,"TIPO_ENTERO");
-                   }
-                   if(variable->tipo == TIPO_FLOAT){
-                     strcpy(tipo1,"TIPO_FLOAT");
-                   }
-                   if(variable->tipo == TIPO_STRING){
-                     strcpy(tipo1,"TIPO_STRING");
-                   }
-                   if(aAsignar->tipo == TIPO_ENTERO){
-                     strcpy(tipo2,"TIPO_ENTERO");
-                   }
-                   if(aAsignar->tipo == TIPO_FLOAT){
-                     strcpy(tipo2,"TIPO_FLOAT");
-                   }
-                   if(aAsignar->tipo == TIPO_STRING){
-                     strcpy(tipo2,"TIPO_STRING");
+                  char tipo1[50];
+                  char tipo2[50];
+                  if(variable->tipo == TIPO_ENTERO){
+                    strcpy(tipo1,"TIPO_ENTERO");
+                  }
+                  if(variable->tipo == TIPO_FLOAT){
+                    strcpy(tipo1,"TIPO_FLOAT");
+                  }
+                  if(variable->tipo == TIPO_STRING){
+                    strcpy(tipo1,"TIPO_STRING");
+                  }
+                  if(aAsignar->tipo == TIPO_ENTERO){
+                    strcpy(tipo2,"TIPO_ENTERO");
+                  }
+                  if(aAsignar->tipo == TIPO_FLOAT){
+                    strcpy(tipo2,"TIPO_FLOAT");
+                  }
+                  if(aAsignar->tipo == TIPO_STRING){
+                    strcpy(tipo2,"TIPO_STRING");
                   }
                   printf("Tipos incompatibles %s con %s\n",&tipo1,&tipo2);
                                 
@@ -337,7 +358,62 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
 																					pilaPushIndice(topPolaca);
 																					
 																				}
+         }		
+         | NOT expresion comparator expresion                                   {bison_log("%s", "CONDICION NOT");
+																			struct itemTabla * varCondicion2 = pilaPopValidacion();
+																			struct itemTabla * varCondicion1 = pilaPopValidacion();		
+																			if(varCondicion1->tipo == TIPO_STRING || varCondicion2->tipo == TIPO_STRING){
+																				if(varCondicion1->tipo != varCondicion2->tipo){
+																					printf("Comparacion no valida, TIPO_STRING con variable no TIPO_STRING\n");
+																					exit(1);
+																				}
+																			
+																			
+																			
 																			}
+																				if(strcmp(comparador,"EQ") == 0){
+																					pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BRANCH IF NOT ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																				if(strcmp(comparador,"NE") == 0){
+																					pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BRANCH IF ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																				if(strcmp(comparador,"GT") == 0){
+																					pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BRANCH IF LESS OR ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																				if(strcmp(comparador,"LT") == 0){
+																					pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BRANCH IF GREATER OR ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																				if(strcmp(comparador,"GE") == 0){
+																					pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BRANCH IF LESS THAN ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																				if(strcmp(comparador,"LE") == 0){
+																					pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BRANCH IF GREATER THAN ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																			}                                      
          | NOT expresion                                                                      {bison_log("%s", "CONDICION");
 																							//No valido nada
 																				pilaPopValidacion();
@@ -536,7 +612,7 @@ factor: CONST_FLOAT {
 				  pilaPushPolaca(var->id);
                   
       }
-	  | MINUS CONST_FLOAT {
+	    | MINUS CONST_FLOAT {
   
                   struct itemTabla * var =malloc(sizeof(struct itemTabla));
                   sprintf( var->id,"-%f", $<val>2 );
@@ -919,8 +995,8 @@ void guardarPolaca() {
   FILE* f = fopen(ARCHIVO_CODIGO_INTERMEDIO, "w");
   if (f) {
 
-    for(i = 0; i <= topPolaca ; i++){
-      fprintf(f, "%d) %s\n", i, stackPolaca[i]);
+    for(i = 0; i <= topPolaca; i++){
+      fprintf(f, "%s ", stackPolaca[i]);
     } 
   
   }
