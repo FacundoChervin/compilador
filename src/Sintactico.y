@@ -4,6 +4,7 @@
 #include <conio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 #include "y.tab.h"
 
 #define YA_EXISTE_EN_TABLA 100
@@ -84,6 +85,7 @@ void pilaPushInicioWhile(int data);
 int isemptyInicioWhile();
 int isfullInicioWhile();
 int peekInicioWhile();
+int my_atoi(const char *c);
 
 %}
 %union {
@@ -704,7 +706,7 @@ int obtenerItemTabla(char idABuscar[50]){
 
             token = strtok(NULL, "|");
             
-            lectura->tipo = atoi(token);
+            lectura->tipo = my_atoi(token);
 
             // printf("id :%s valor:%s tipo:%d \n",lectura->id,lectura->valor,lectura->tipo);
 
@@ -741,7 +743,7 @@ int actualizarItemTabla (struct itemTabla* aInsertar){
                 strcpy(lectura->valor,token);
 
                 token = strtok(NULL, "|");
-                lectura->tipo = atoi(token);
+                lectura->tipo = my_atoi(token);
 
              if(strcmp(aInsertar->id,lectura->id)==0){
                 if(aInsertar->tipo != lectura->tipo){
