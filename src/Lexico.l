@@ -5,10 +5,74 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <float.h>
 #include "y.tab.h"
 FILE  *yyin;
 
+#define MAX_STRING 256
+#define MIN_INT -32768
+#define MAX_INT 32767
+#define MIN_FLOAT -FLT_MAX
+#define MAX_FLOAT FLT_MAX
+
 void yyerror(char*);
+
+int my_atoi(const char *c) {
+  
+    int value = 0;
+    int sign = 1;
+    if( *c == '-' )
+    {
+        if( *c == '-' ) sign = -1;
+        c++;
+    }
+    while (isdigit(*c))
+    {
+        value *= 10;
+        value += (int) (*c-'0');
+        c++;
+    }
+    return (value * sign);
+}
+
+double my_atof(const char* s){
+  
+  double value = 0, fact = 1;
+  int point_seen = 0;
+  const char* aux = s;
+  int cant_digit_dec = 0;
+    
+  if (*aux == '-'){
+    aux++;
+    fact = -1;
+  }
+  
+  while (isdigit(*aux) || *aux == '.' || *aux != '\0') {
+
+    if (*aux == '.'){
+      
+      point_seen = 1;
+      aux++;
+      continue;
+    }
+    
+    value += (int) (*aux-'0');
+    if (point_seen == 1) {
+      
+      cant_digit_dec++;
+    } 
+    value *= 10;
+    aux++;
+    
+  }  
+  
+  while (cant_digit_dec >= 0) {
+    value = value / 10.0;
+    cant_digit_dec--;
+  }
+  
+  return value * fact;
+}
 
 void flex_log(const char* msg, ...) {
   
@@ -49,9 +113,9 @@ OR                        (O|o)(R|r)
 NOT                       (N|n)(O|o)(T|t)
 ELSE                      (E|e)(L|l)(S|s)(E|e)
 
-NUM_INTEGER               [0-9]+
-NUM_FLOAT                 ([0-9]+"."[0-9]*)|([0-9]*"."[0-9]+)
-PHRASE                    (.)+
+NUM_INTEGER               "-"{0,1}[0-9]+
+NUM_FLOAT                 "-"{0,1}([0-9]+"."[0-9]*)|([0-9]*"."[0-9]+)
+PHRASE                    .*
 CHAR                      [A-Za-z]
 NEG                       "-"
 
@@ -97,9 +161,33 @@ END_COMMENT               "/-"
 "=="                      {flex_log("[Igual]"); return EQ;}
 "!="                      {flex_log("[Distinto]"); return NE;}
 
-{NUM_INTEGER}                   {flex_log("[ENTERO] %d", atoi(yytext));	yylval.intval = atoi(yytext); return CONST_INTEGER;}
-{NUM_FLOAT}                     {flex_log("[REAL]   %f", atof(yytext));	yylval.val = atof(yytext); return CONST_FLOAT;}
-"\""{PHRASE}"\""                {flex_log("[STRING] %s", yytext);			yylval.str_val = yytext; return CONST_STRING;}
+{NUM_INTEGER}                   { flex_log("[ENTERO] %d", my_atoi(yytext));	
+                                  yylval.intval = my_atoi(yytext); 
+                                  if (yylval.intval < MIN_INT || yylval.intval > MAX_INT) {
+                                    printf("Rango de entero invalido\n"); exit(1);
+                                  } else {
+                                    return CONST_INTEGER;                                   
+                                  }
+                                }
+                                   
+{NUM_FLOAT}                     { flex_log("[REAL]   %f", my_atof(yytext));	
+                                  yylval.val = my_atof(yytext); 
+                                  if (yylval.val < MIN_FLOAT || yylval.val > MAX_FLOAT) {
+                                    printf("Rango de float invalido\n"); exit(1);
+                                  } else {
+                                    return CONST_FLOAT;
+                                  }  
+                                }
+                                
+"\""{PHRASE}"\""                { flex_log("[STRING] %s", yytext);			
+                                  yylval.str_val = yytext; 
+                                  if (strlen(yylval.str_val) > MAX_STRING){
+                                    printf("Tamaño de string mayor a la cota\n"); exit(1);
+                                  } else {
+                                    return CONST_STRING;
+                                  }
+                                }
+                                
 ({CHAR}|{NUM_INTEGER}){1,32}    {flex_log("[VARIABLE] %s", yytext);		yylval.str_val = yytext; return VARIABLE;}
 
 
@@ -119,4 +207,4 @@ END_COMMENT               "/-"
 "\t"
 "\r\n"
 
-.                           { printf("Caracter invalido!");  exit(1);}
+.                           { printf("Caracter invalido!"); exit(1); }

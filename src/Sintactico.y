@@ -40,7 +40,6 @@ int cantidadEnAvg = 0;
 char * comparador ="";
 char * operadorlogico ="";
 
-
 void bison_log(const char* msg, ...) {
   
   va_list arglist;
@@ -57,7 +56,11 @@ void bison_log(const char* msg, ...) {
   return;
 }
 
+int yylex();
+int yyerror();
 
+int obtenerItemTabla(char idABuscar[50]);
+int insertarEnTabla(struct itemTabla* aInsertar);
 void confirmarPunteroPila(int valorAAsignar);
 int isemptyValidacion();
 int isfullValidacion();
@@ -75,6 +78,7 @@ char* peekPolaca();
 char* pilaPopPolaca();
 void pilaPushPolaca(char* data);
 void printPolaca();
+void guardarPolaca();
 int pilaPopInicioWhile();
 void pilaPushInicioWhile(int data);
 int isemptyInicioWhile();
@@ -97,71 +101,72 @@ char *str_val;
 
 %%
 
-start: program {bison_log("%s", "Compilacion completa");pilaPushPolaca("FIN DE PROGRAMA");}
+start: program {bison_log("%s", "Compilacion completa"); pilaPushPolaca("FIN DE PROGRAMA"); };
 
 program: list_statement                           
-       | area_declaracion list_statement          
-       ;
+       | area_declaracion list_statement;
 
 list_statement: statement                         
-              | statement list_statement          
-              ;
+              | statement list_statement;
 
 statement: between | average | write | read | while_statement | if_statement | assignement;
  
 write: WRITE variable_no_terminal       {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE %s",$<str_val>2);pilaPushPolaca(aux); }
-     | WRITE CONST_FLOAT    {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE %f",$<val>2);pilaPushPolaca(aux); }
-     | WRITE CONST_INTEGER  {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE %d",$<intval>2);pilaPushPolaca(aux); }
-	 | WRITE MINUS CONST_FLOAT    {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE -%f",$<val>3);pilaPushPolaca(aux); }
-     | WRITE MINUS CONST_INTEGER  {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE -%d",$<intval>3);pilaPushPolaca(aux); }
-     | WRITE CONST_STRING   {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE %s",$<str_val>2);pilaPushPolaca(aux); }
-     ;
+     | WRITE CONST_FLOAT                {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE %f",$<val>2);pilaPushPolaca(aux); }
+     | WRITE CONST_INTEGER              {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE %d",$<intval>2);pilaPushPolaca(aux); }
+     | WRITE MINUS CONST_FLOAT          {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE -%f",$<val>3);pilaPushPolaca(aux); }
+     | WRITE MINUS CONST_INTEGER        {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE -%d",$<intval>3);pilaPushPolaca(aux); }
+     | WRITE CONST_STRING               {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE %s",$<str_val>2);pilaPushPolaca(aux); };
 
-read: READ variable_no_terminal {bison_log("%s", "READ");char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"READ %s",$<str_val>2);pilaPushPolaca(aux); };
+read: READ variable_no_terminal         {bison_log("%s", "READ"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"READ %s",$<str_val>2);pilaPushPolaca(aux); };
 
 comparator: GT  {comparador ="GT";}             
           | LT  {comparador ="LT";}             
           | GE  {comparador ="GE";}            
           | LE  {comparador ="LE";}             
           | EQ  {comparador ="EQ";}           
-          | NE  {comparador ="NE";} ;
+          | NE  {comparador ="NE";};
 
 logic_operator: AND  {operadorlogico ="AND";}             
               | OR   {operadorlogico ="OR";};
 
-while_statement: WHILE {pilaPushInicioWhile(topPolaca+1);} A_P condition C_P A_L {confirmarPunteroPila(topPolaca+2);pilaPushPolaca("BRANCH");pilaPushIndice(topPolaca);} list_statement 
-		{
-		char* aux = malloc(sizeof(char) * 1024);
-		sprintf(aux, "%s%d", "JUMP ",pilaPopInicioWhile());
-		pilaPushPolaca(aux);
-		 
-		} C_L { 
-				bison_log("%s", "WHILE"); 
-				  confirmarPunteroPila(topPolaca+1);
-				  
-				};
+while_statement:  WHILE { pilaPushInicioWhile(topPolaca+1); } 
+                  A_P condition C_P A_L { confirmarPunteroPila(topPolaca+2);pilaPushPolaca("BRANCH");pilaPushIndice(topPolaca); } 
+                  list_statement 
+                  {
+                    char* aux = malloc(sizeof(char) * 1024);
+                    sprintf(aux, "%s%d", "JUMP ",pilaPopInicioWhile());
+                    pilaPushPolaca(aux);
+       
+                  } C_L { 
+                  
+                    bison_log("%s", "WHILE"); 
+                    confirmarPunteroPila(topPolaca+1);
+                  };
 
 
-if_statement: if_header {bison_log("%s", "IF");pilaPushPolaca("BRANCH");confirmarPunteroPila(topPolaca+1);pilaPushIndice(topPolaca);} if_body 
-					{
-						confirmarPunteroPila(topPolaca+1);
-					}; 
+if_statement: if_header { bison_log("%s", "IF"); pilaPushPolaca("BRANCH"); confirmarPunteroPila(topPolaca+1); pilaPushIndice(topPolaca); } 
+              if_body 
+              {
+                confirmarPunteroPila(topPolaca+1);
+              }; 
          
 if_header: IF A_P condition C_P;
 
 if_body: if_struct
        | if_struct ELSE 
-	   {
-		confirmarPunteroPila(topPolaca+2);
-	
-		pilaPushPolaca("JUMP");
-		pilaPushIndice(topPolaca);
-	   } if_struct;
+         {
+            confirmarPunteroPila(topPolaca+2);
+
+            pilaPushPolaca("JUMP");
+            pilaPushIndice(topPolaca);
+            
+         } if_struct;
          
 if_struct: A_L list_statement C_L                               
          | A_L C_L;
 
-assignement: variable_no_terminal ASIG expresion {
+assignement:  variable_no_terminal ASIG expresion {
   
                 bison_log("%s","ASIGNACION");
                 struct itemTabla * aAsignar = pilaPopValidacion();
@@ -170,32 +175,34 @@ assignement: variable_no_terminal ASIG expresion {
                 if(variable->tipo!=aAsignar->tipo){
                   
                   printf("Asignacion Invalida\n");
-                  char tipo1[50];
-                  char tipo2[50];
-                  if(variable->tipo == TIPO_ENTERO){
-                    strcpy(tipo1,"TIPO_ENTERO");
-                  }
-                  if(variable->tipo == TIPO_FLOAT){
-                    strcpy(tipo1,"TIPO_FLOAT");
-                  }
-                  if(variable->tipo == TIPO_STRING){
-                    strcpy(tipo1,"TIPO_STRING");
-                  }
-                  if(aAsignar->tipo == TIPO_ENTERO){
-                    strcpy(tipo2,"TIPO_ENTERO");
-                  }
-                  if(aAsignar->tipo == TIPO_FLOAT){
-                    strcpy(tipo2,"TIPO_FLOAT");
-                  }
-                  if(aAsignar->tipo == TIPO_STRING){
-                    strcpy(tipo2,"TIPO_STRING");
+                  
+                  printf("aaa %s %s %d\n", variable->id, variable->valor, variable->tipo);
+                  
+                   char tipo1[50];
+                   char tipo2[50];
+                   if(variable->tipo == TIPO_ENTERO){
+                     strcpy(tipo1,"TIPO_ENTERO");
+                   }
+                   if(variable->tipo == TIPO_FLOAT){
+                     strcpy(tipo1,"TIPO_FLOAT");
+                   }
+                   if(variable->tipo == TIPO_STRING){
+                     strcpy(tipo1,"TIPO_STRING");
+                   }
+                   if(aAsignar->tipo == TIPO_ENTERO){
+                     strcpy(tipo2,"TIPO_ENTERO");
+                   }
+                   if(aAsignar->tipo == TIPO_FLOAT){
+                     strcpy(tipo2,"TIPO_FLOAT");
+                   }
+                   if(aAsignar->tipo == TIPO_STRING){
+                     strcpy(tipo2,"TIPO_STRING");
                   }
                   printf("Tipos incompatibles %s con %s\n",&tipo1,&tipo2);
                                 
                   exit(1);
                 }       
-
-				pilaPushPolaca(":=");
+                pilaPushPolaca(":=");
 				
               };
 
@@ -205,11 +212,9 @@ variable_no_terminal: VARIABLE {
                           printf("La variable %s no fue declarada\n",$<str_val>1);
                           exit(1);
                         }
+                        
                         pilaPushValidacion(lectura);    
-			
-						pilaPushPolaca(lectura->id);
-						
-						
+                        pilaPushPolaca(lectura->id);
                       };
 
 condition: expresion comparator expresion logic_operator expresion comparator expresion       {
@@ -643,11 +648,10 @@ int main(int argc,char *argv[])
   }
   else
   {
-	crearTabla();
-	yyparse();
-	printPolaca();
-
-	
+    crearTabla();
+    yyparse();
+    printPolaca();
+    guardarPolaca();
   }
   
   fclose(yyin);
@@ -661,14 +665,14 @@ int yyerror(void)
   exit (1);
 }
 
-
-
 int insertarEnTabla(struct itemTabla* aInsertar){
+  
     if(obtenerItemTabla(aInsertar->id) == NO_EXISTE_EN_TABLA){
         file= fopen(TABLA_SIMBOLOS, "a");
         if (file != NULL) {
+                  
                 char * txtAInsertar = (char*)malloc(200);
-                sprintf(txtAInsertar,"%s|%s|%d\n",aInsertar->id,aInsertar->valor,aInsertar->tipo);
+                sprintf(txtAInsertar,"%s|%s|%d\n",aInsertar->id, aInsertar->valor, aInsertar->tipo);
                 fputs(txtAInsertar,file);
                 fclose(file);
         }else{
@@ -680,8 +684,6 @@ int insertarEnTabla(struct itemTabla* aInsertar){
     }
 }
 
-
-
 int obtenerItemTabla(char idABuscar[50]){
     //DEVUELVE CERO NO EXISTE
     //DEVUELVE UNO, LO ENCONTRO
@@ -692,6 +694,7 @@ int obtenerItemTabla(char idABuscar[50]){
 
         while(fgets(linea,BUFSIZ,file) != NULL){
             char *token;
+            char sTipo[256];
 
             token = strtok(linea, "|");
             strcpy(lectura->id,token);
@@ -700,9 +703,10 @@ int obtenerItemTabla(char idABuscar[50]){
             strcpy(lectura->valor,token);
 
             token = strtok(NULL, "|");
+            
             lectura->tipo = atoi(token);
 
-            //printf("id :%s valor:%s tipo:%d \n",lectura->id,lectura->valor,lectura->tipo);
+            // printf("id :%s valor:%s tipo:%d \n",lectura->id,lectura->valor,lectura->tipo);
 
              if(strcmp(idABuscar,lectura->id)==0){
                 fclose(file);
@@ -905,6 +909,20 @@ void printPolaca() {
 		printf("%d : %s\n",i,stackPolaca[i]);
 	}
 	
+}
+
+void guardarPolaca() {
+  
+  int i;
+  FILE* f = fopen(ARCHIVO_CODIGO_INTERMEDIO, "w");
+  if (f) {
+
+    for(i = 0; i <= topPolaca ; i++){
+      fprintf(f, "%d) %s\n", i, stackPolaca[i]);
+    } 
+  
+  }
+
 }
 
 int pilaPopInicioWhile() {

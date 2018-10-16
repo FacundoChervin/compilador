@@ -4,6 +4,18 @@ d,f:STRING
 g:INTEGER
 ENDDEC
 -/COMENTARIO1 -/COMENTARIO 2/- /-
-while(a <= b OR a  == 3){
-a:=3.0
+while(a <= b OR g  == 3){
+a:=             0.01
+b        := -1.213
+b := 0.12313
+g:=-1
+
+      if ( 1 < 2 ) {
+        WRITE "12345"
+        WRITE "1234"
+        WRITE "123"
+        WRITE "12"
+        WRITE "1"
+        WRITE ""
+      }
 }
