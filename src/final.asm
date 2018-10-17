@@ -13,12 +13,11 @@ include number.asm
 	d	dd	 
 	f	dd	 
 	g	dd	 
-	3	dd	 
 	0.010000	dd	 
 	-1.213000	dd	 
 	0.123130	dd	 
 	-1	dd	 
-	_str_1	dd	"hola"
+	hola	dd	 
 	1	dd	 
 	2	dd	 
 

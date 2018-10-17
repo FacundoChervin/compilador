@@ -1,1 +1,31 @@
-a b g 3 - CMP BRANCH IF ZERO 8 BRANCH36 a 0.010000 := b -1.213000 := b 0.123130 := g -1 := d "hola" := 1 2 - CMP BRANCH IF GREATER OR ZERO 29 BRANCH35 WRITE "12345" WRITE "1234" WRITE "123" WRITE "12" WRITE "1" WRITE "" JUMP 0 FIN DE PROGRAMA 
+0 : a 
+1 : b 
+2 : CMP 
+3 : BGT 30 
+4 : a 
+5 : 0.010000 
+6 : := 
+7 : b 
+8 : -1.213000 
+9 : := 
+10 : b 
+11 : 0.123130 
+12 : := 
+13 : g 
+14 : -1 
+15 : := 
+16 : d 
+17 : hola 
+18 : := 
+19 : 1 
+20 : 2 
+21 : CMP 
+22 : BLT 29 
+23 : WRITE "12345" 
+24 : WRITE "1234" 
+25 : WRITE "123" 
+26 : WRITE "12" 
+27 : WRITE "1" 
+28 : WRITE "" 
+29 : JMP 0 
+30 : FIN DE PROGRAMA 
