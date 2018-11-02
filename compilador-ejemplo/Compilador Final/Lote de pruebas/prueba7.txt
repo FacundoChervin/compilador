@@ -1,0 +1,24 @@
+DECLARE
+	INTEGER a,b,c;
+ENDDECLARE
+
+MAIN() {
+	a:=3;
+	b:=4;
+	c:=5;
+
+	/# NEGACIÓN #/
+	IF ! a > b
+		THEN
+			b:=c;
+			PUT "Negacion Simple OK";		
+	FI;
+
+
+	/# NEGACIÓN DE CONDICION DOBLE #/
+	IF !a > b && a > c 
+		THEN 
+			PUT "Negacion Doble OK";	
+	FI;
+
+}

@@ -1,0 +1,23 @@
+TABLA DE  SIMBOLOS:
+Nro	 | Nombre			 | Tipo	 | Valor	 | Longitud 
+0     	 | a     			 | INTEGER     	 |  	 | 0 
+1     	 | b     			 | INTEGER     	 |  	 | 0 
+2     	 | i     			 | INTEGER     	 |  	 | 0 
+3     	 | c     			 | STRING     	 |  	 | 0 
+4     	 | d     			 | STRING     	 |  	 | 0 
+5     	 | pivote     			 | INTEGER     	 |  	 | 0 
+6     	 | _30     			 | CTE_ENT     	 | 30 	 | 0 
+7     	 | cadena     			 | STRING     	 |  	 | 0 
+8     	 | _Compi     			 | CTE_STRING     	 | Compi 	 | 5 
+9     	 | auto     			 | STRUCT     	 |  	 | 0 
+10     	 | _2     			 | CTE_ENT     	 | 2 	 | 0 
+11     	 | auto.patente     			 | STRING     	 |  	 | 0 
+12     	 | auto.modelo     			 | INTEGER     	 |  	 | 0 
+13     	 | _3     			 | CTE_ENT     	 | 3 	 | 0 
+14     	 | _4     			 | CTE_ENT     	 | 4 	 | 0 
+15     	 | _AnalisisLexico     			 | CTE_STRING     	 | AnalisisLexico 	 | 14 
+16     	 | _AnalisisSintactico     			 | CTE_STRING     	 | AnalisisSintactico 	 | 18 
+17     	 | _20     			 | CTE_ENT     	 | 20 	 | 0 
+18     	 | _1     			 | CTE_ENT     	 | 1 	 | 0 
+19     	 | _5     			 | CTE_ENT     	 | 5 	 | 0 
+20     	 | _10     			 | CTE_ENT     	 | 10 	 | 0 

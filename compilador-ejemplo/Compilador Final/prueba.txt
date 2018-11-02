@@ -1,0 +1,46 @@
+DECLARE
+	INTEGER a,b,i;
+	STRING c,d;
+	CONST INTEGER pivote:=30;
+	CONST STRING cadena:="Compi";
+	STRUCT auto[2]( STRING auto.patente ; INTEGER auto.modelo );
+ENDDECLARE
+
+MAIN() {
+	a:=3;
+	b:=4;
+	c:="AnalisisLexico";
+	d:="AnalisisSintactico";
+	auto.modelo:=20;
+
+	/# Concat String y Constantes #/
+	c:=c++cadena;
+	PUT c;
+
+	/# FOR , IF #/
+	FOR i:=1 TO 3
+		IF i>2
+			THEN 
+				PUT i;
+		FI;
+	NEXT i;
+
+	/# NEGACIÓN DE CONDICION DOBLE #/
+	IF !5 > 10 && 5 > 20 
+		THEN 
+			PUT a;
+	FI;
+
+	/# Suma, Resta , Constantes y Struct #/
+	a:=b+pivote-auto.modelo;
+	PUT a;
+
+
+	/# UNTIL-REPEAT #/
+	REPEAT
+		PUT b;
+		b := b + 1;
+	UNTIL b < 5;
+	
+}
+

@@ -1,0 +1,16 @@
+DECLARE
+	INTEGER i,n;
+ENDDECLARE
+
+MAIN() {
+	n:=3;
+
+	/# FOR #/
+	FOR i:=1 TO 5
+		PUT i;
+	NEXT i;
+
+	FOR i:=1 TO n
+		PUT "Compilador";
+	NEXT i;
+}

@@ -1,0 +1,22 @@
+DECLARE
+	FLOAT a,b,c;
+ENDDECLARE
+
+MAIN() {
+	a:=2.4;
+	b:=3.5;
+
+	/# Suma Reales #/
+	c:=a+b;	
+	PUT c;
+
+	/# Resta Reales #/	
+	c:=b-a;
+	PUT c;
+
+	/# Multiplicación Reales #/	
+	c:=a*b;
+	PUT c;
+
+}
+

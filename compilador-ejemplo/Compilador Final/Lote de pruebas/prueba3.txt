@@ -1,0 +1,27 @@
+DECLARE
+	STRING e,f,g;
+ENDDECLARE
+
+MAIN() {
+	/# CONCATENACIÓN DE STRINGS #/
+	g:="Uno";
+	e:=g;
+	PUT e;
+
+	f:="Dos";
+	e:=f++g;
+	PUT e;
+
+	e:="Hola";
+	PUT e;
+
+	e:="Hola"++e;
+	PUT e;
+
+	e:=e++"Chau";
+	PUT e;
+
+	e:="Hola"++"Chau";
+	PUT e;
+
+}

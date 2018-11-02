@@ -1,0 +1,21 @@
+DECLARE
+	INTEGER a,b,c;
+
+ENDDECLARE
+
+MAIN() {
+	a:=3;
+	b:=4;
+	c:=5;
+
+	/# IF ANIDADOS #/
+	IF a <= b
+		THEN
+			IF a <= c
+				THEN
+					a:=b;
+					PUT "IF Anidado Correcto";
+			FI;
+	FI;
+}
+

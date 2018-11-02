@@ -1,0 +1,23 @@
+DECLARE
+	INTEGER a,b,c,i,n;
+ENDDECLARE
+
+MAIN() {
+	a:=3;
+	b:=4;
+	c:=5;
+
+	/# IF-ELSE #/
+	IF a != b
+		THEN 
+			a := b;
+			PUT " If Else Correcto ";
+		ELSE
+			c := 0;
+			PUT " Else ";
+	FI;
+
+}
+
+
+

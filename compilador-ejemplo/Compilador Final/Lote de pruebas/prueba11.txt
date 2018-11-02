@@ -1,0 +1,17 @@
+DECLARE
+	INTEGER a;
+	STRING cad;
+	CONST INTEGER pivote:=30;
+	CONST STRING cadena:="Compi";
+ENDDECLARE
+
+MAIN() {
+	/# Opero con las Constantes Con Nombres #/
+	a:=pivote-pivote+1;
+	cad:=cadena++"Lador";
+
+	PUT a;
+	PUT cad;
+}
+
+

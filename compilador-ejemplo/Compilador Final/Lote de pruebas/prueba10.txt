@@ -1,0 +1,20 @@
+DECLARE
+	INTEGER a;
+	STRING b;
+	STRUCT auto[2]( STRING auto.patente ; INTEGER auto.modelo );
+ENDDECLARE
+
+MAIN() {
+	a:=3;
+	b:="Patente";
+	
+	/# OPERO CON LOS MIEMBROS DEL STRUCT #/
+	auto.modelo:=a+5;
+	auto.patente:=b++"Struct";
+	
+	PUT auto.modelo;
+	PUT auto.patente;	
+
+}
+
+

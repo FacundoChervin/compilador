@@ -1,0 +1,28 @@
+DECLARE
+	INTEGER a,b,c;
+ENDDECLARE
+
+MAIN() {
+	a:=5;
+	b:=3;
+	c:=2;
+
+	/# CONDICION DOBLE #/
+	IF a > b && a > c 
+		THEN 
+			PUT " And Correcto ";
+	FI;
+
+	IF a > b || a > c 
+		THEN 
+			PUT " Or Correcto ";
+	FI;
+
+
+}
+
+
+
+
+
+

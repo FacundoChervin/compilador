@@ -1,0 +1,18 @@
+DECLARE
+	INTEGER a;
+ENDDECLARE
+
+MAIN() {
+	a:=1;
+
+	/# UNTIL-REPEAT #/
+	REPEAT
+		PUT a;
+		a := a + 1;
+	UNTIL a < 5;
+	
+
+	
+}
+
+

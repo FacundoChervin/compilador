@@ -1,0 +1,27 @@
+DECLARE
+	INTEGER a,b,c;
+ENDDECLARE
+
+MAIN() {
+	a:=2;
+	b:=3;
+
+	/# Suma Enteros #/
+	c:=a+b;	
+	PUT c;
+
+	/# Resta Enteros #/	
+	c:=b-a;
+	PUT c;
+
+	/# Multiplicación Enteros #/	
+	c:=a*b;
+	PUT c;
+
+	/# División Enteros #/	
+	c:=a/a;
+	PUT c;
+	
+}
+
+
