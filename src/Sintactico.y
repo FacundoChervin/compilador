@@ -63,6 +63,7 @@ int yyerror();
 int obtenerItemTabla(char idABuscar[50]);
 int insertarEnTabla(struct itemTabla* aInsertar);
 void confirmarPunteroPila(int valorAAsignar);
+void confirmarPunteroPilaAnterior(int valorAAsignar);
 int isemptyValidacion();
 int isfullValidacion();
 struct itemTabla* peekValidacion();
@@ -86,6 +87,8 @@ int isemptyInicioWhile();
 int isfullInicioWhile();
 int peekInicioWhile();
 int my_atoi(const char *c);
+int huboComparacionAnd;
+int huboComparacionOr;
 
 %}
 %union {
@@ -133,7 +136,14 @@ logic_operator: AND  {operadorlogico ="AND";}
               | OR   {operadorlogico ="OR";};
 
 while_statement:  WHILE { pilaPushInicioWhile(topPolaca+1); } 
-                  A_P condition C_P A_L { confirmarPunteroPila(topPolaca+2);pilaPushPolaca("JMP ");pilaPushIndice(topPolaca); } 
+                  A_P condition C_P A_L 
+				  { 
+						if(huboComparacionOr == 1){
+							huboComparacionOr = 0;
+							confirmarPunteroPilaAnterior(topPolaca+1);
+							
+						}
+				  } 
                   list_statement 
                   {
                     char* aux = malloc(sizeof(char) * 1024);
@@ -147,7 +157,14 @@ while_statement:  WHILE { pilaPushInicioWhile(topPolaca+1); }
                   };
 
 
-if_statement: if_header { bison_log("%s", "IF"); pilaPushPolaca("JMP "); confirmarPunteroPila(topPolaca+1); pilaPushIndice(topPolaca); } 
+if_statement: if_header 
+			  { bison_log("%s", "IF"); 
+				if(huboComparacionOr == 1){
+					huboComparacionOr = 0;
+					confirmarPunteroPilaAnterior(topPolaca+1);
+					
+				}
+			  } 
               if_body 
               {
                 confirmarPunteroPila(topPolaca+1);
@@ -176,7 +193,7 @@ assignement:  variable_no_terminal ASIG CONST_STRING {
                   sprintf( var->id,"%s", $<str_val>3 );
                   strcpy(var->valor," ");
                   var->tipo = TIPO_STRING;
-                  pilaPushValidacion(var);
+                 // pilaPushValidacion(var);
                   insertarEnTabla(var);
 				  
                   pilaPushPolaca(var->id);
@@ -242,8 +259,8 @@ variable_no_terminal: VARIABLE {
                         pilaPushPolaca(lectura->id);
                       };
 
-condition: expresion comparator expresion logic_operator expresion comparator expresion       {
-																			bison_log("%s", "CONDICION");
+condition: expresion comparator expresion logic_operator {
+																			bison_log("%s", "CONDICION DOBLE ");
 																			struct itemTabla * varCondicion2 = pilaPopValidacion();
 																			struct itemTabla * varCondicion1 = pilaPopValidacion();		
 																			if(varCondicion1->tipo == TIPO_STRING || varCondicion2->tipo == TIPO_STRING){
@@ -251,35 +268,134 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
 																					printf("Comparacion no valida, TIPO_STRING con variable no TIPO_STRING\n");
 																					exit(1);
 																				}
-																			}
 																			
-																			varCondicion2 = pilaPopValidacion();
-																			varCondicion1 = pilaPopValidacion();		
-																			if(varCondicion1->tipo == TIPO_STRING || varCondicion2->tipo == TIPO_STRING){
-																				if(varCondicion1->tipo != varCondicion2->tipo){
-																					printf("Comparacion no valida, TIPO_STRING con variable no TIPO_STRING\n");
-																					exit(1);
-																				}
-																			}
 																			
+																			
+																			}
+																			if(strcmp(operadorlogico,"AND") == 0){
+																			huboComparacionAnd++;
 																				if(strcmp(comparador,"EQ") == 0){
 																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BNE "); //pilaPushPolaca("BRANCH IF ZERO ");
+																					pilaPushPolaca("BNE ");//pilaPushPolaca("BRANCH IF ZERO ");
+																					pilaPushIndice(topPolaca*-1);
+																					
+																				}
+																				if(strcmp(comparador,"NE") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BEQ ");//pilaPushPolaca("BRANCH IF NOT ZERO ");
+																					pilaPushIndice(topPolaca*-1);
+																					
+																				}
+																				if(strcmp(comparador,"GT") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BLE ");//pilaPushPolaca("BRANCH IF GREATER THAN ZERO ");
+																					pilaPushIndice(topPolaca*-1);
+																					
+																				}
+																				if(strcmp(comparador,"LT") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BGE ");//pilaPushPolaca("BRANCH IF LESS THAN ZERO ");
+																					pilaPushIndice(topPolaca*-1);
+																					
+																				}
+																				if(strcmp(comparador,"GE") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BLT ");//pilaPushPolaca("BRANCH IF GREATER OR ZERO ");
+																					pilaPushIndice(topPolaca*-1);
+																					
+																				}
+																				if(strcmp(comparador,"LE") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BGT ");//pilaPushPolaca("BRANCH IF LESS OR ZERO ");
+																					pilaPushIndice(topPolaca*-1);
+																					
+																				}
+																			}else{
+																				huboComparacionOr = 1;
+																					if(strcmp(comparador,"EQ") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BEQ ");//pilaPushPolaca("BRANCH IF ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"NE") == 0){
 																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BEQ "); //pilaPushPolaca("BRANCH IF NOT ZERO ");
+																					pilaPushPolaca("BNE ");//pilaPushPolaca("BRANCH IF NOT ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
 																				if(strcmp(comparador,"GT") == 0){
 																					//pilaPushPolaca("-");
 																					pilaPushPolaca("CMP");
-																					pilaPushPolaca("BLT ");//pilaPushPolaca("BRANCH IF GREATER THAN ZERO ");
+																					pilaPushPolaca("BGT ");//pilaPushPolaca("BRANCH IF GREATER THAN ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																				if(strcmp(comparador,"LT") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BLT ");//pilaPushPolaca("BRANCH IF LESS THAN ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																				if(strcmp(comparador,"GE") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BGE ");//pilaPushPolaca("BRANCH IF GREATER OR ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																				if(strcmp(comparador,"LE") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BLE ");//pilaPushPolaca("BRANCH IF LESS OR ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																			
+																			}
+																			} 
+								
+								
+														expresion comparator expresion     {
+																			bison_log("%s", "CONDICION DOBLE ");
+																			struct itemTabla * varCondicion2 = pilaPopValidacion();
+																			struct itemTabla * varCondicion1 = pilaPopValidacion();		
+																			if(varCondicion1->tipo == TIPO_STRING || varCondicion2->tipo == TIPO_STRING){
+																				if(varCondicion1->tipo != varCondicion2->tipo){
+																					printf("Comparacion no valida, TIPO_STRING con variable no TIPO_STRING\n");
+																					exit(1);
+																				}
+																			
+																			
+																			
+																			}
+																				if(strcmp(comparador,"EQ") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BNE ");//pilaPushPolaca("BRANCH IF ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																				if(strcmp(comparador,"NE") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BEQ ");//pilaPushPolaca("BRANCH IF NOT ZERO ");
+																					pilaPushIndice(topPolaca);
+																					
+																				}
+																				if(strcmp(comparador,"GT") == 0){
+																					//pilaPushPolaca("-");
+																					pilaPushPolaca("CMP");
+																					pilaPushPolaca("BLE ");//pilaPushPolaca("BRANCH IF GREATER THAN ZERO ");
 																					pilaPushIndice(topPolaca);
 																					
 																				}
@@ -304,7 +420,6 @@ condition: expresion comparator expresion logic_operator expresion comparator ex
 																					pilaPushIndice(topPolaca);
 																					
 																				}
-																			
 																			}
          | expresion comparator expresion                                   {bison_log("%s", "CONDICION");
 																			struct itemTabla * varCondicion2 = pilaPopValidacion();
@@ -443,14 +558,14 @@ between: BETWEEN A_P variable_no_terminal COMMA A_C expresion P_C expresion C_C 
 																	  }
 																	  
 																	  pilaPushPolaca(varAComparar->id);
-																	  pilaPushPolaca("-");
+																	  //pilaPushPolaca("-");
 																	  pilaPushPolaca("CMP");
-																	  pilaPushPolaca("BGT");//pilaPushPolaca("BRANCH IF HIGHER ");
+																	  pilaPushPolaca("BGT ");//pilaPushPolaca("BRANCH IF HIGHER ");
 																	  pilaPushIndice(topPolaca);
 																	  pilaPushPolaca(varAComparar->id);
-																	  pilaPushPolaca("-");
+																	  //pilaPushPolaca("-");
 																	  pilaPushPolaca("CMP");
-																	  pilaPushPolaca("BGT");//pilaPushPolaca("BRANCH IF HIGHER ");
+																	  pilaPushPolaca("BGT ");//pilaPushPolaca("BRANCH IF HIGHER ");
 																	  pilaPushIndice(topPolaca);
 																	  pilaPushPolaca("TRUE");
 																	  pilaPushPolaca("JMP");
@@ -674,7 +789,11 @@ declaracion: list_variable DOUBLE_POINTS FLOAT {
                           while(isemptyValidacion()==0){
                             struct itemTabla * var = pilaPopValidacion();
                             var->tipo = TIPO_FLOAT;
-                            insertarEnTabla(var);
+							int error = insertarEnTabla(var);
+							  if(error == YA_EXISTE_EN_TABLA){
+									printf("Variable ya declarada anteriormente\n");
+									exit(0);
+							  }
                           }
            }
            | list_variable DOUBLE_POINTS STRING {
@@ -682,7 +801,11 @@ declaracion: list_variable DOUBLE_POINTS FLOAT {
                           while(isemptyValidacion()==0){
                             struct itemTabla * var = pilaPopValidacion();
                             var->tipo = TIPO_STRING;
-                            insertarEnTabla(var);
+							int error = insertarEnTabla(var);
+							  if(error == YA_EXISTE_EN_TABLA){
+									printf("Variable ya declarada anteriormente\n");
+									exit(0);
+							  }
                             
                           }   
            }
@@ -692,7 +815,11 @@ declaracion: list_variable DOUBLE_POINTS FLOAT {
                               struct itemTabla * var = pilaPopValidacion();
                               var->tipo = TIPO_ENTERO;
 
-                              insertarEnTabla(var);
+                              int error = insertarEnTabla(var);
+							  if(error == YA_EXISTE_EN_TABLA){
+									printf("Variable ya declarada anteriormente\n");
+									exit(0);
+							  }
                             }      
 };
           
@@ -746,13 +873,22 @@ int yyerror(void)
 }
 
 int insertarEnTabla(struct itemTabla* aInsertar){
-  
+	char tipo[50];
     if(obtenerItemTabla(aInsertar->id) == NO_EXISTE_EN_TABLA){
         file= fopen(TABLA_SIMBOLOS, "a");
         if (file != NULL) {
                   
                 char * txtAInsertar = (char*)malloc(200);
-                sprintf(txtAInsertar,"%s|%s|%d\n",aInsertar->id, aInsertar->valor, aInsertar->tipo);
+				if(aInsertar->tipo == TIPO_ENTERO){
+					strcpy(tipo,"ENTERO");
+				}
+				if(aInsertar->tipo == TIPO_FLOAT){
+					strcpy(tipo,"FLOAT");
+				}
+				if(aInsertar->tipo == TIPO_STRING){
+					strcpy(tipo,"STRING");
+				}
+                sprintf(txtAInsertar,"%s|%s|%s|%d\n",aInsertar->id, aInsertar->valor, tipo,sizeof(aInsertar->valor));
                 fputs(txtAInsertar,file);
                 fclose(file);
         }else{
@@ -784,9 +920,22 @@ int obtenerItemTabla(char idABuscar[50]){
 
             token = strtok(NULL, "|");
             
-            lectura->tipo = my_atoi(token);
+			//lectura->tipo = my_atoi(token);
+			char tipo[50];
+			strcpy(tipo,token);
 
-            // printf("id :%s valor:%s tipo:%d \n",lectura->id,lectura->valor,lectura->tipo);
+				if(strcmp(tipo,"ENTERO")==0){
+					lectura->tipo = TIPO_ENTERO;
+				}
+				if(strcmp(tipo,"FLOAT")==0){
+					lectura->tipo = TIPO_FLOAT;
+				}
+				if(strcmp(tipo,"STRING")==0){
+					lectura->tipo = TIPO_STRING;
+				}
+				
+			
+            //printf("tipo:%s id :%s valor:%s tipo:%d \n",tipo,lectura->id,lectura->valor,lectura->tipo);
 
              if(strcmp(idABuscar,lectura->id)==0){
                 fclose(file);
@@ -821,19 +970,49 @@ int actualizarItemTabla (struct itemTabla* aInsertar){
                 strcpy(lectura->valor,token);
 
                 token = strtok(NULL, "|");
-                lectura->tipo = my_atoi(token);
+				//lectura->tipo = my_atoi(token);
+				char tipo[50];
+				strcpy(tipo,token);
+
+				if(strcmp(tipo,"ENTERO")==0){
+					lectura->tipo = TIPO_ENTERO;
+				}
+				if(strcmp(tipo,"FLOAT")==0){
+					lectura->tipo = TIPO_FLOAT;
+				}
+				if(strcmp(tipo,"STRING")==0){
+					lectura->tipo = TIPO_STRING;
+				}
 
              if(strcmp(aInsertar->id,lectura->id)==0){
                 if(aInsertar->tipo != lectura->tipo){
                     return ASIGNACION_INCOMPATIBLE;
                 }
                 char * txtAInsertar = (char*)malloc(200);
-                sprintf(txtAInsertar,"%s|%s|%d\n",aInsertar->id,aInsertar->valor,aInsertar->tipo);
+				if(aInsertar->tipo == TIPO_ENTERO){
+					strcpy(tipo,"ENTERO");
+				}
+				if(aInsertar->tipo == TIPO_FLOAT){
+					strcpy(tipo,"FLOAT");
+				}
+				if(aInsertar->tipo == TIPO_STRING){
+					strcpy(tipo,"STRING");
+				}
+                sprintf(txtAInsertar,"%s|%s|%s|%d\n",aInsertar->id,aInsertar->valor,tipo,sizeof(aInsertar->valor));
                 fputs(txtAInsertar,file2);
 
              }else{
                 char * txtAInsertar = (char*)malloc(200);
-                sprintf(txtAInsertar,"%s|%s|%d\n",lectura->id,lectura->valor,lectura->tipo);
+				if(lectura->tipo == TIPO_ENTERO){
+					strcpy(tipo,"ENTERO");
+				}
+				if(lectura->tipo == TIPO_FLOAT){
+					strcpy(tipo,"FLOAT");
+				}
+				if(lectura->tipo == TIPO_STRING){
+					strcpy(tipo,"STRING");
+				}
+                sprintf(txtAInsertar,"%s|%s|%s|%d\n",lectura->id,lectura->valor,lectura->tipo,sizeof(lectura->valor));
                 fputs(txtAInsertar,file2);
 
              }
@@ -855,7 +1034,27 @@ void confirmarPunteroPila(int valorAAsignar) {
 			char* aux = malloc(sizeof(char) * 1024);
 			sprintf(aux, "%s%d", stackPolaca[indicePolaca],valorAAsignar);
 			stackPolaca[indicePolaca] = aux;
+			
+			int indicePolacaAnterior = pilaPopIndice();
+			if(indicePolacaAnterior < 0){
+				indicePolacaAnterior *= -1;
+				sprintf(aux, "%s%d", stackPolaca[indicePolacaAnterior],valorAAsignar);
+				stackPolaca[indicePolacaAnterior] = aux;
+			}else{
+				pilaPushIndice(indicePolacaAnterior);
 			}
+			}
+void confirmarPunteroPilaAnterior(int valorAAsignar) {
+		
+		int indicePolacaPrimero = pilaPopIndice();
+		int indicePolaca = pilaPopIndice();
+		pilaPushIndice(indicePolacaPrimero);
+		char* aux = malloc(sizeof(char) * 1024);
+		sprintf(aux, "%s%d", stackPolaca[indicePolaca],valorAAsignar);
+		stackPolaca[indicePolaca] = aux;
+	}
+			
+			
 
 int isemptyValidacion() {
 
