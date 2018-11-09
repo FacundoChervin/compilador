@@ -268,7 +268,7 @@ condition: expresion comparator expresion logic_operator {
 																					printf("Comparacion no valida, TIPO_STRING con variable no TIPO_STRING\n");
 																					exit(1);
 																				}
-																			
+															 				
 																			
 																			
 																			}
@@ -540,10 +540,14 @@ condition: expresion comparator expresion logic_operator {
 																							
 																							};
 
-between: BETWEEN A_P variable_no_terminal COMMA A_C expresion P_C expresion C_C C_P {bison_log("%s", "BETWEEN");
+between: variable_no_terminal ASIG BETWEEN A_P variable_no_terminal COMMA A_C expresion P_C expresion C_C C_P 
+																	{
+																	  bison_log("%s", "BETWEEN");
+																	  
 																	  struct itemTabla * varLimite2 = pilaPopValidacion();
 																	  struct itemTabla * varLimite1 = pilaPopValidacion();
 																	  struct itemTabla * varAComparar = pilaPopValidacion();
+																	  struct itemTabla * varAAsignar = pilaPopValidacion();
 																	  if(varLimite2->tipo == TIPO_STRING){
 																			printf("Operacion between no acepta variables TIPO_STRING\n");
 																			exit(1);
@@ -556,26 +560,40 @@ between: BETWEEN A_P variable_no_terminal COMMA A_C expresion P_C expresion C_C 
 																			printf("Operacion between no acepta variables TIPO_STRING\n");
 																			exit(1);
 																	  }
+																	  if(varAAsignar->tipo == TIPO_STRING){
+																			printf("Operacion between no puede asignarse a variable TIPO_STRING\n");
+																			exit(1);
+																	  }
 																	  
 																	  pilaPushPolaca(varAComparar->id);
 																	  //pilaPushPolaca("-");
 																	  pilaPushPolaca("CMP");
-																	  pilaPushPolaca("BGT ");//pilaPushPolaca("BRANCH IF HIGHER ");
+																	  pilaPushPolaca("BLT ");//pilaPushPolaca("BRANCH IF HIGHER ");
 																	  pilaPushIndice(topPolaca);
+																	  pilaPushPolaca(varLimite1->id);
 																	  pilaPushPolaca(varAComparar->id);
 																	  //pilaPushPolaca("-");
 																	  pilaPushPolaca("CMP");
 																	  pilaPushPolaca("BGT ");//pilaPushPolaca("BRANCH IF HIGHER ");
 																	  pilaPushIndice(topPolaca);
-																	  pilaPushPolaca("TRUE");
+																	  //pilaPushPolaca("TRUE");
+
+																	  pilaPushPolaca(varAAsignar->id);
+																	  pilaPushPolaca("1");
+																	  pilaPushPolaca(":=");
+																	  
 																	  pilaPushPolaca("JMP");
+																	  confirmarPunteroPila(topPolaca +1);
+																	  confirmarPunteroPila(topPolaca +1);
 																	  pilaPushIndice(topPolaca);
-																	  pilaPushPolaca("false");
+																	  //pilaPushPolaca("false");
+																	  pilaPushPolaca(varAAsignar->id);
+																	  pilaPushPolaca("0");
+																	  pilaPushPolaca(":=");
 																	
 																	//Confirmo los punteros de los saltos
 																	  confirmarPunteroPila(topPolaca+1);
-																	  confirmarPunteroPila(topPolaca);
-																	  confirmarPunteroPila(topPolaca);
+
 
 
 																	 
