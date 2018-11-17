@@ -16,7 +16,7 @@
 #define TIPO_ENTERO 201
 #define TIPO_FLOAT 202
 
-#define MAXSIZEPILA 500
+#define MAXSIZEPILA 5000
 #define TABLA_SIMBOLOS "ts.txt"
 #define ARCHIVO_CODIGO_INTERMEDIO "intermedia.txt"
 
@@ -107,7 +107,7 @@ char *str_val;
 
 %%
 
-start: program {bison_log("%s", "Compilacion completa"); pilaPushPolaca("FIN DE PROGRAMA"); };
+start: program {bison_log("%s", "Compilacion completa"); pilaPushPolaca("END"); };
 
 program: list_statement                           
        | area_declaracion list_statement;
@@ -117,14 +117,14 @@ list_statement: statement
 
 statement: between | average | write | read | while_statement | if_statement | assignement;
  
-write: WRITE variable_no_terminal       {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE %s",$<str_val>2);pilaPushPolaca(aux); }
-     | WRITE CONST_FLOAT                {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE %f",$<val>2);pilaPushPolaca(aux); }
-     | WRITE CONST_INTEGER              {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE %d",$<intval>2);pilaPushPolaca(aux); }
-     | WRITE MINUS CONST_FLOAT          {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE -%f",$<val>3);pilaPushPolaca(aux); }
-     | WRITE MINUS CONST_INTEGER        {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE -%d",$<intval>3);pilaPushPolaca(aux); }
-     | WRITE CONST_STRING               {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"WRITE %s",$<str_val>2);pilaPushPolaca(aux); };
+write: WRITE variable_no_terminal       {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux, "%s", $<str_val>2); pilaPushPolaca(aux); pilaPushPolaca("WRITE"); }
+     | WRITE CONST_FLOAT                {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux, "%f", $<val>2); pilaPushPolaca(aux); pilaPushPolaca("WRITE"); } 
+     | WRITE CONST_INTEGER              {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux, "%d", $<intval>2); pilaPushPolaca(aux); pilaPushPolaca("WRITE"); } 
+     | WRITE MINUS CONST_FLOAT          {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux, "-%f", $<val>3); pilaPushPolaca(aux); pilaPushPolaca("WRITE"); }
+     | WRITE MINUS CONST_INTEGER        {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux, "-%d", $<intval>3); pilaPushPolaca(aux); pilaPushPolaca("WRITE"); }
+     | WRITE CONST_STRING               {bison_log("%s", "WRITE"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux, "%s", $<str_val>2); pilaPushPolaca(aux); pilaPushPolaca("WRITE"); };
 
-read: READ variable_no_terminal         {bison_log("%s", "READ"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux,"READ %s",$<str_val>2);pilaPushPolaca(aux); };
+read: READ variable_no_terminal         {bison_log("%s", "READ"); char* aux = malloc(sizeof(char) * 1024); sprintf(aux, "%s", $<str_val>2); pilaPushPolaca(aux); pilaPushPolaca("READ"); };
 
 comparator: GT  {comparador ="GT";}             
           | LT  {comparador ="LT";}             
@@ -148,7 +148,9 @@ while_statement:  WHILE { pilaPushInicioWhile(topPolaca+1); }
                   list_statement 
                   {
                     char* aux = malloc(sizeof(char) * 1024);
-                    sprintf(aux, "%s%d", "JMP ",pilaPopInicioWhile());
+                    sprintf(aux, "%s", "JMP");
+                    pilaPushPolaca(aux);
+                    sprintf(aux, "%d", pilaPopInicioWhile());
                     pilaPushPolaca(aux);
        
                   } C_L { 
@@ -178,7 +180,7 @@ if_body: if_struct
          {
             confirmarPunteroPila(topPolaca+2);
 
-            pilaPushPolaca("JMP ");
+            pilaPushPolaca("JMP");
             pilaPushIndice(topPolaca);
             
          } if_struct;
@@ -878,7 +880,7 @@ int main(int argc,char *argv[])
     yyparse();
     printPolaca();
     guardarPolaca();
-    genera_file(TABLA_SIMBOLOS);
+    genera_file(TABLA_SIMBOLOS, ARCHIVO_CODIGO_INTERMEDIO);
   }
   
   fclose(yyin);
@@ -908,7 +910,7 @@ int insertarEnTabla(struct itemTabla* aInsertar){
                 if(aInsertar->tipo == TIPO_STRING){
                     strcpy(tipo,"STRING");
                 }
-                sprintf(txtAInsertar,"%s|%s|%s|%d\n",aInsertar->id, aInsertar->valor, tipo,sizeof(aInsertar->valor));
+                sprintf(txtAInsertar,"%s|%s|%s|%d\n",aInsertar->id, aInsertar->valor, tipo, sizeof(aInsertar->valor));
                 fputs(txtAInsertar,file);
                 fclose(file);
         }else{
@@ -1205,7 +1207,7 @@ void pilaPushPolaca(char* data) {
 void printPolaca() {
     int i = 0;
     for(i = 0; i <= topPolaca ; i++){
-        printf("%d : %s\n",i,stackPolaca[i]);
+        printf("%d|%s\n",i,stackPolaca[i]);
     }
     
 }
@@ -1217,10 +1219,12 @@ void guardarPolaca() {
   if (f) {
 
     for(i = 0; i <= topPolaca; i++){
-      fprintf(f, "%d : %s \n",i, stackPolaca[i]);
+      fprintf(f, "%d|%s\n",i, stackPolaca[i]);
     } 
   
   }
+
+  fclose(f);
 
 }
 

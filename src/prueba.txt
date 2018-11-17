@@ -1,16 +1,18 @@
 DECVAR
 a,b,c:FLOAT
 d,f:STRING
-g:INTEGER
+g,final:INTEGER
 ENDDEC
 -/COMENTARIO1 -/COMENTARIO 2/- /-
 while(a <= b){
 a:=             0.01
 b        := -1.213
 b := 0.12313
-g:=-1
 d:="hola"
 
+READ d
+
+final:= BETWEEN(final, [1; 2])
 
       if ( NOT 1 < 2 ) {
         WRITE "12345"
@@ -21,3 +23,5 @@ d:="hola"
         WRITE ""
       }
 }
+
+final := 25 * 1 + (123 - 1)
