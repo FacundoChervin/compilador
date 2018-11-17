@@ -63,7 +63,7 @@ void write_to_file(const char* line) {
 /*
  * Genera el archivo assembler
  */ 
-void genera_file(const char* filename_ts) {
+void genera_file(const char* filename_ts){
 
     char buffer[BUFF_MAX];
     char* ptr_aux = NULL;
