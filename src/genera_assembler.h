@@ -8,13 +8,11 @@
 
 #define BUFF_MAX    256
 
-#define TYPE_STRING "200"
-#define TYPE_INT    "201"
-#define TYPE_FLOAT  "202"
+#define TYPE_STRING "STRING"
+#define TYPE_INT    "ENTERO"
+#define TYPE_FLOAT  "FLOAT"
+#define TYPE_CONST_STRING "const_string_"
 
-#define CONST_STRING_NAME "_str_%d"
-#define CONST_INT_NAME    "_int_%d"
-#define CONST_FLOAT_NAME  "_float_%d"
 #define VAR_AUX_NAME      "@aux%d"
 
 #define MAXSIZEPILA 5000
@@ -33,6 +31,13 @@ char POLACA[MAXSIZEPILA][BUFF_MAX];
 char PILA[MAXSIZEPILA][BUFF_MAX];
 int tope = 0;
 
+// Lista con el destino de los branchs
+int branch_list[MAXSIZEPILA] = {0};
+int branch_count = 0;
+
+int jump_list[MAXSIZEPILA] = {0};
+int jump_count = 0;
+
 //
 // DECLARACION DE FUNCIONES
 //
@@ -46,11 +51,19 @@ void genera_asignacion();
 void genera_operacion();
 void read_func();
 void write_func();
+void genera_branch();
+void genera_jump();
+void set_tag(int idx);
 
 // Funciones de la pila
 void push(const char* data);
 void pop(char* data);
 void print_stack();
+
+// Funciones auxiliares
+int isConst(const char* name);
+int isAux(const char* name);
+int is_in_list(int i);
 
 //
 // DEFINICION DE FUNCIONES
@@ -93,7 +106,10 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
     unsigned int cont_const_string  = 1;
     unsigned int cont_const_int     = 1;
     unsigned int cont_const_float   = 1;
-    char* new_line = NULL;    
+    char* new_line = NULL;   
+
+    unsigned int branch_flag = 0;
+    unsigned int jump_flag = 0;
 
     FILE* file_ts = fopen(filename_ts, "r");
     if (file_ts == NULL ) {
@@ -126,6 +142,7 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
     write_to_file(".DATA");
     write_to_file("");
 
+    // Lee el archivo de tabla de simbolos
     while(fgets(buffer, BUFF_MAX, file_ts) != NULL) {
 
         char var_name[BUFF_MAX];
@@ -138,6 +155,9 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
 
         ptr_aux = strtok(NULL, "|");
         strcpy(var_value, ptr_aux);
+        if (strcmp(var_value, TYPE_STRING) == 0 ) {
+            strcpy(var_value, "");
+        }
 
         ptr_aux = strtok(NULL, "|");
         strcpy(var_type, ptr_aux);
@@ -147,20 +167,25 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
         }
 
         // Valida que sea una constante
-        if(strcmp(var_type, TYPE_STRING) == 0) {
+        if (var_name[0] >= '0' && var_name[0] <= '9' || var_name[0] == '-') {
 
-            if (var_name[0] == '\"' && var_name[strlen(var_name) - 1] == '\"') {
+            ;
 
-                strcpy(var_value, var_name);
-                sprintf(var_name, CONST_STRING_NAME, cont_const_string);
-                cont_const_string++;
+        } else {
+
+            if ( strstr(var_name, TYPE_CONST_STRING) > 0 ) {
+
+                sprintf(buffaux, "\t_%s\tdd\t\"%s\"", var_name, var_value);
+
+            } else {
+
+                strcpy(var_value, "?");
+                sprintf(buffaux, "\t_%s\tdd\t%s", var_name, var_value);
             }
+
+            write_to_file(buffaux);
+            
         }
-
-        // @TODO variables constantes
-
-        sprintf(buffaux, "\t_%s\tdd\t%s", var_name, "?");
-        write_to_file(buffaux);
     }
     fclose(file_ts);
 
@@ -175,12 +200,48 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
     int indice_polaca = 0;
     while(fgets(buffer, BUFF_MAX, file_polaca) != NULL) {
 
+        char buffer_aux[BUFF_MAX];
+        strcpy(buffer_aux, buffer);
+        char* idx = strtok(buffer_aux, "|");
+        char* data = strtok(NULL, "|");
+        new_line = strchr(data, '\n');
+        if(new_line != NULL){
+            *new_line = '\0';
+        }             
+        
+        if(branch_flag > 0 ){
+            branch_flag++;
+            if(branch_flag==3){
+                
+                branch_list[branch_count] = atoi(data);
+                branch_count++;
+                branch_flag = 0;
+            }
+        }
+        if(jump_flag > 0) {
+            jump_flag++;
+            if(jump_flag == 2){
+
+                jump_list[jump_count] = atoi(data);
+                jump_count++;
+                jump_flag = 0;                
+            }
+        }        
+        if( strcmp(data, "CMP") == 0) {
+            branch_flag++;
+        }
+        if( strcmp(data, "JMP") == 0) {
+            jump_flag++;
+        }
+
         strcpy(POLACA[indice_polaca], buffer);
         indice_polaca++;
     }
     fclose(file_polaca);
 
     // Lee la polaca para cargarla en la pila y generar codigo assembler
+    branch_flag = 0;
+    jump_flag = 0;
     for(int i=0; i < indice_polaca; i++){
 
         strtok(POLACA[i], "|");
@@ -190,7 +251,31 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
             *new_line = '\0';
         }        
 
+        if (is_in_list(i) == 1) {
+            set_tag(i);
+        }
+
         push(aux_ptr);
+
+        // Genera codigo branch
+        if (branch_flag > 0) {
+            branch_flag++;
+            if ( branch_flag == 3) {
+                genera_branch();
+                branch_flag = 0;
+            }
+            continue;
+        }
+
+        // Genera codigo jump
+        if (jump_flag > 0 ) {
+            jump_flag++;
+            if ( jump_flag == 2 ) {
+                genera_jump();
+                jump_flag = 0;
+            }       
+            continue;             
+        }
 
         //
         // Operadores Binarios
@@ -218,7 +303,19 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
             write_func();
         }
 
+        //
+        // Branch o Jump
+        //
+        if ( strcmp(aux_ptr, "CMP") == 0) {
+            branch_flag++;
+        }
+        if ( strcmp(aux_ptr, "JMP") == 0) {
+            jump_flag++;
+        }
+
+        //
         // END OF PROGRAM
+        //
         if ( strcmp(aux_ptr, "END") == 0) {
             write_to_file("END START");
         }
@@ -243,12 +340,39 @@ void genera_asignacion() {
     char op_izq[BUFF_MAX];
     char buffer[BUFF_MAX];
 
+    char buff_izq[BUFF_MAX];
+    char buff_der[BUFF_MAX];
+
     pop(asig);
     pop(op_der);
     pop(op_izq);
 
-    sprintf(buffer, "\tmov _%s, %s", op_izq, op_der);
+    if (isConst(op_izq) == 1) {
+        sprintf(buff_izq, "%s", op_izq);
+    } else {
+
+        if(isAux(op_izq) == 1) {
+            sprintf(buff_izq, "%s", op_izq);
+        } else {
+            sprintf(buff_izq, "_%s", op_izq);
+        }
+    }
+
+    if (isConst(op_der) == 1) {
+        sprintf(buff_der, "%s", op_der);
+    } else {
+
+        if(isAux(op_der) == 1) {
+            sprintf(buff_der, "%s", op_der);
+        } else {
+            sprintf(buff_der, "_%s", op_der);
+        }
+    }    
+
+    sprintf(buffer, "\tmov %s, %s", buff_izq, buff_der);
     write_to_file(buffer);
+    write_to_file("");
+
 }
 
 /*
@@ -283,12 +407,33 @@ void genera_operacion() {
     sprintf(new_var, VAR_AUX_NAME, aux_cant);
     aux_cant++;
 
-    sprintf(buffer, "\tmov R1, _%s", op_izq);
+    if (isConst(op_izq) == 1) {
+        sprintf(buffer, "\tmov R1, %s", op_izq);
+    } else {
+
+        if(isAux(op_izq) == 1) {
+            sprintf(buffer, "\tmov R1, %s", op_izq);
+        } else {
+            sprintf(buffer, "\tmov R1, _%s", op_izq);
+        }
+    }
     write_to_file(buffer);
-    sprintf(buffer, "\t%s R1, _%s", assembler_operator, op_der);
+
+    if (isConst(op_der) == 1) {
+        sprintf(buffer, "\t%s R1, %s", assembler_operator, op_der);
+    } else {
+        if(isAux(op_der) == 1) {
+            sprintf(buffer, "\t%s R1, %s", assembler_operator, op_der);
+        } else {
+            sprintf(buffer, "\t%s R1, _%s", assembler_operator, op_der);
+        }
+        
+    }
     write_to_file(buffer);
+
     sprintf(buffer, "\tmov %s, R1", new_var);
     write_to_file(buffer);
+    write_to_file("");
 
     push(new_var);
 }
@@ -299,14 +444,25 @@ void genera_operacion() {
 void write_func() {
 
     char func[BUFF_MAX];
-    char msg[BUFF_MAX];
+    char var[BUFF_MAX];
     char buffer[BUFF_MAX];
 
     pop(func);
-    pop(msg);
+    pop(var);
 
-    sprintf(buffer, "\tdisplayString %s", msg);
+    if (isConst(var) == 1) {
+        sprintf(buffer, "\tdisplayString %s", var);
+    } else {
+        if (isAux(var) == 1) {
+            sprintf(buffer, "\tdisplayString %s", var);    
+        } else {
+            sprintf(buffer, "\tdisplayString _%s", var);
+        }
+    }
+
     write_to_file(buffer);
+    write_to_file("");
+
 }
 
 /*
@@ -321,14 +477,110 @@ void read_func() {
     pop(func);
     pop(var);
 
-    sprintf(buffer, "\tgetString %s", var);
+    if (isConst(var) == 1) {
+        sprintf(buffer, "\tgetString %s", var);
+    } else {
+        sprintf(buffer, "\tgetString _%s", var);
+    }
+
+    write_to_file(buffer);
+    write_to_file("");
+
+}
+
+void genera_branch() {
+
+    char go_to[BUFF_MAX];
+    char comparator[BUFF_MAX];
+    char cmp_assembler[BUFF_MAX];
+    char func[BUFF_MAX];
+    char buffer[BUFF_MAX];
+    char op_izq[BUFF_MAX];
+    char op_der[BUFF_MAX];
+    char buffer_der[BUFF_MAX];
+    char buffer_izq[BUFF_MAX];
+
+    pop(go_to);
+    pop(comparator);
+    pop(func);
+    pop(op_der);
+    pop(op_izq);
+
+    if (isConst(op_der) == 1) {
+        sprintf(buffer_der, "%s", op_der);
+    } else {
+        if (isAux(op_der) == 1) {
+            sprintf(buffer_der, "%s", op_der);    
+        } else {
+            sprintf(buffer_der, "_%s", op_der);
+        }
+    }
+
+    if (isConst(op_izq) == 1) {
+        sprintf(buffer_izq, "%s", op_izq);
+    } else {
+        if (isAux(op_izq) == 1) {
+            sprintf(buffer_izq, "%s", op_izq);    
+        } else {
+            sprintf(buffer_izq, "_%s", op_izq);
+        }
+    }
+
+    if(strcmp(comparator, "BEQ") == 0) {
+        strcpy(cmp_assembler, "JE");
+    }
+    if(strcmp(comparator, "BNE") == 0) {
+        strcpy(cmp_assembler, "JNE");
+    }   
+    if(strcmp(comparator, "BGT") == 0) {
+        strcpy(cmp_assembler, "JG");
+    }  
+    if(strcmp(comparator, "BLT") == 0) {
+        strcpy(cmp_assembler, "JL");
+    }      
+    if(strcmp(comparator, "BGE") == 0) {
+        strcpy(cmp_assembler, "JGE");
+    }  
+    if(strcmp(comparator, "BLE") == 0) {
+        strcpy(cmp_assembler, "JLE");
+    }      
+
+    sprintf(buffer, "\tCMP %s, %s", buffer_izq, buffer_der);
+    write_to_file(buffer);
+    sprintf(buffer, "\t%s ET_%s\n", cmp_assembler, go_to);
+    write_to_file(buffer);
+    write_to_file("");
+}
+
+void genera_jump() {
+
+    char go_to[BUFF_MAX];
+    char func[BUFF_MAX];
+    char buffer[BUFF_MAX];
+
+    pop(go_to);
+    pop(func);
+
+    sprintf(buffer, "\tJMP ET_%s\n", go_to);
+    write_to_file(buffer);
+    write_to_file("");
+}
+
+/*
+ * Genera una etiqueta
+ */
+void set_tag(int idx) {
+
+    char buffer[BUFF_MAX];
+
+    sprintf(buffer, "ET_%d:\n", idx);
+
     write_to_file(buffer);
 }
 
 //
 // Funciones de la pila
 //
-
 
 /*
  * Push en la pila
@@ -359,4 +611,54 @@ void print_stack(){
         printf("PILA[%d] = %s\n", i, PILA[i]);
         fflush(stdin);
     }
+}
+
+//
+// Funciones auxiliares
+//
+
+/*
+ * Valida si es constante entera o float
+ */ 
+int isConst(const char* name) {
+
+    if (name[0] >= '0' && name[0] <= '9' || name[0] == '-') {
+        return 1;
+    }
+    return 0;
+}
+
+/*
+ * Valida si variable auxiliar
+ */ 
+int isAux(const char* name) {
+
+    if (name[0] == '@') {
+        return 1;
+    }
+    return 0;
+}
+
+/*
+ * Verifica si el indice se encuentra en una posicion que tiene salto
+ */
+int is_in_list(int i) {
+
+    int j = 0;
+
+    for(j = 0; j < branch_count; j++){
+        if(branch_list[j] == i){
+
+            return 1;
+        }
+    }
+
+    for(j = 0; j < jump_count; j++){
+        if(jump_list[j] == i){
+
+            return 1;
+        }
+    }    
+
+    return 0;
 }
