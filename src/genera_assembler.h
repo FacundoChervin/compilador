@@ -321,7 +321,7 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
         }
 
     }
-    print_stack();
+    // print_stack();
 
     close_file();
 }
