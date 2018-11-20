@@ -5,6 +5,7 @@
 // MACROS
 //
 #define FILENAME_OUT "final.asm"
+#define FILENAME_AUX "aux_out.asm"
 
 #define BUFF_MAX    256
 
@@ -45,6 +46,7 @@ void create_file();
 void close_file();
 void write_to_file(const char* line);
 void genera_file();
+void add_aux_to_file();
 
 // Funciones que generan codigo assembler
 void genera_asignacion();
@@ -61,7 +63,8 @@ void pop(char* data);
 void print_stack();
 
 // Funciones auxiliares
-int isConst(const char* name);
+int isConstInt(const char* name);
+int isConstFloat(const char* name);
 int isAux(const char* name);
 int is_in_list(int i);
 
@@ -133,7 +136,7 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
     write_to_file("");
 
     // Definicion de arquitectura
-    write_to_file(".MODEL SMALL");
+    write_to_file(".MODEL LARGE");
     write_to_file(".386");
     write_to_file(".STACK 200h");
     write_to_file("");
@@ -169,13 +172,26 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
         // Valida que sea una constante
         if (var_name[0] >= '0' && var_name[0] <= '9' || var_name[0] == '-') {
 
-            ;
+            // Si es una constante flotante
+            if (isConstFloat(var_name) == 1) {
+
+                strcpy(var_value, var_name);
+                char *aux = strchr(var_name, '.');
+                *aux = '_';
+                aux = strchr(var_name, '-');
+                if ( aux != NULL ){
+                    *aux = 'N';
+                }
+                sprintf(buffaux, "\t@%s\tdd\t%s", var_name, var_value);
+                write_to_file(buffaux);
+            }
+            
 
         } else {
 
             if ( strstr(var_name, TYPE_CONST_STRING) > 0 ) {
 
-                sprintf(buffaux, "\t_%s\tdd\t\"%s\"", var_name, var_value);
+                sprintf(buffaux, "\t_%s\tdb\t\"%s\"", var_name, var_value);
 
             } else {
 
@@ -184,8 +200,10 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
             }
 
             write_to_file(buffaux);
-            
+           
         }
+
+        
     }
     fclose(file_ts);
 
@@ -193,6 +211,10 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
 
     // Area de codigo
     write_to_file(".CODE");
+    write_to_file("");
+    write_to_file("MOV AX,@DATA");
+    write_to_file("MOV DS,AX");
+    write_to_file("FINIT;");
     write_to_file("");
     write_to_file("START:");
 
@@ -317,13 +339,23 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
         // END OF PROGRAM
         //
         if ( strcmp(aux_ptr, "END") == 0) {
+            write_to_file("\tmov ah, 1 ; pausa, espera que oprima una tecla");
+            write_to_file("\tint 21h ; AH=1 es el servicio de lectura");
+            write_to_file("\tMOV AX, 4C00h ; Sale del Dos");
+            write_to_file("\tINT 21h       ; Enviamos la interrupcion 21h");
+            write_to_file("");
             write_to_file("END START");
+            break;
         }
 
     }
     // print_stack();
 
+    // Cierra el archivo
     close_file();
+
+    // Agrega variables auxiliares en el cuerpo .DATA
+    add_aux_to_file();
 }
 
 //
@@ -335,6 +367,7 @@ void genera_file(const char* filename_ts, const char* filename_polaca){
  */
 void genera_asignacion() {
 
+    int flag = 0;
     char asig[BUFF_MAX];
     char op_der[BUFF_MAX];
     char op_izq[BUFF_MAX];
@@ -347,30 +380,60 @@ void genera_asignacion() {
     pop(op_der);
     pop(op_izq);
 
-    if (isConst(op_izq) == 1) {
+    if(isAux(op_izq) == 1) {
         sprintf(buff_izq, "%s", op_izq);
     } else {
-
-        if(isAux(op_izq) == 1) {
-            sprintf(buff_izq, "%s", op_izq);
-        } else {
-            sprintf(buff_izq, "_%s", op_izq);
-        }
+        sprintf(buff_izq, "_%s", op_izq);
     }
-
-    if (isConst(op_der) == 1) {
+ 
+    if (isConstInt(op_der) == 1) {
         sprintf(buff_der, "%s", op_der);
+
     } else {
 
-        if(isAux(op_der) == 1) {
-            sprintf(buff_der, "%s", op_der);
+        if ( isConstFloat(op_der) == 1) {
+
+            char *aux = strchr(op_der, '.');
+            *aux = '_';
+            aux = strchr(op_der, '-');
+            if ( aux != NULL ){
+                *aux = 'N';
+            }            
+            sprintf(buff_der, "@%s", op_der);   
+            flag = 2;
+
         } else {
-            sprintf(buff_der, "_%s", op_der);
+
+            flag = 1;
+            if(isAux(op_der) == 1) {
+                sprintf(buff_der, "[%s]", op_der);
+            } else {
+                sprintf(buff_der, "[_%s]", op_der);
+            }
         }
     }    
 
-    sprintf(buffer, "\tmov %s, %s", buff_izq, buff_der);
-    write_to_file(buffer);
+    if (flag == 1) {
+
+        sprintf(buffer, "\tmov eax, %s", buff_der);
+        write_to_file(buffer);
+
+        sprintf(buffer, "\tmov %s, eax", buff_izq);
+        write_to_file(buffer);
+
+    } else if (flag == 2) {
+
+        sprintf(buffer, "\tfld %s", buff_der);
+        write_to_file(buffer);
+
+        sprintf(buffer, "\tfstp %s", buff_izq);
+        write_to_file(buffer);      
+
+    } else {
+
+        sprintf(buffer, "\tmov %s, %s", buff_izq, buff_der);
+        write_to_file(buffer);
+    }
     write_to_file("");
 
 }
@@ -392,7 +455,7 @@ void genera_operacion() {
     pop(op_izq);
 
     if(strcmp(operando, "+") == 0) {
-        strcpy(assembler_operator, "sum");
+        strcpy(assembler_operator, "add");
     }
     if(strcmp(operando, "-") == 0) {
         strcpy(assembler_operator, "sub");
@@ -407,31 +470,96 @@ void genera_operacion() {
     sprintf(new_var, VAR_AUX_NAME, aux_cant);
     aux_cant++;
 
-    if (isConst(op_izq) == 1) {
-        sprintf(buffer, "\tmov R1, %s", op_izq);
+    if (isConstInt(op_izq) == 1) {
+        sprintf(buffer, "\tmov eax, %s", op_izq);
     } else {
 
-        if(isAux(op_izq) == 1) {
-            sprintf(buffer, "\tmov R1, %s", op_izq);
+        if(isConstFloat(op_izq) == 1) {
+
+            char *aux = strchr(op_izq, '.');
+            *aux = '_';
+            aux = strchr(op_izq, '-');
+            if ( aux != NULL ){
+                *aux = 'N';
+            }            
+            sprintf(buffer, "\tmov eax, [@%s]", op_izq);   
+
         } else {
-            sprintf(buffer, "\tmov R1, _%s", op_izq);
+
+            if(isAux(op_izq) == 1) {
+                sprintf(buffer, "\tmov eax, [%s]", op_izq);
+            } else {
+                sprintf(buffer, "\tmov eax, [_%s]", op_izq);
+            }
         }
+
     }
     write_to_file(buffer);
 
-    if (isConst(op_der) == 1) {
-        sprintf(buffer, "\t%s R1, %s", assembler_operator, op_der);
-    } else {
-        if(isAux(op_der) == 1) {
-            sprintf(buffer, "\t%s R1, %s", assembler_operator, op_der);
-        } else {
-            sprintf(buffer, "\t%s R1, _%s", assembler_operator, op_der);
-        }
-        
-    }
-    write_to_file(buffer);
 
-    sprintf(buffer, "\tmov %s, R1", new_var);
+    if ( strcmp(assembler_operator,  "div") == 0 || strcmp(assembler_operator, "mul") == 0){
+
+        if (isConstInt(op_der) == 1) {
+            sprintf(buffer, "\tmov ebx, %s", op_der);
+        } else {
+
+            if(isConstFloat(op_der) == 1) {
+
+                char *aux = strchr(op_der, '.');
+                *aux = '_';
+                aux = strchr(op_der, '-');
+                if ( aux != NULL ){
+                    *aux = 'N';
+                }                
+                sprintf(buffer, "\tmov ebx, [@%s]", op_der);              
+
+            } else {
+
+                if(isAux(op_der) == 1) {
+                    sprintf(buffer, "\tmov ebx, [%s]", op_der);
+                } else {
+                    sprintf(buffer, "\tmov ebx, [_%s]", op_der);
+                }
+            }
+
+        }
+        write_to_file(buffer);
+
+        sprintf(buffer, "\t%s ebx", assembler_operator);
+        write_to_file(buffer);
+
+
+    } else {
+
+        if (isConstInt(op_der) == 1) {
+            sprintf(buffer, "\t%s eax, %s", assembler_operator, op_der);
+        } else {
+
+            if(isConstFloat(op_der) == 1) {
+
+                char *aux = strchr(op_der, '.');
+                *aux = '_';
+                aux = strchr(op_der, '-');
+                if ( aux != NULL ){
+                    *aux = 'N';
+                }                
+                sprintf(buffer, "\t%s eax, [@%s]", assembler_operator, op_der);                       
+
+            } else {
+
+                if(isAux(op_der) == 1) {
+                    sprintf(buffer, "\t%s eax, [%s]", assembler_operator, op_der);
+                } else {
+                    sprintf(buffer, "\t%s eax, [_%s]", assembler_operator, op_der);
+                }
+            }
+
+        }
+        write_to_file(buffer);
+    }
+
+
+    sprintf(buffer, "\tmov %s, eax", new_var);
     write_to_file(buffer);
     write_to_file("");
 
@@ -450,13 +578,28 @@ void write_func() {
     pop(func);
     pop(var);
 
-    if (isConst(var) == 1) {
+    if (isConstInt(var) == 1) {
         sprintf(buffer, "\tdisplayString %s", var);
     } else {
-        if (isAux(var) == 1) {
-            sprintf(buffer, "\tdisplayString %s", var);    
+
+        if(isConstFloat(var) == 1) {
+
+            char *aux = strchr(var, '.');
+            *aux = '_';
+            aux = strchr(var, '-');
+            if ( aux != NULL ){
+                *aux = 'N';
+            }            
+            sprintf(buffer, "\tdisplayString [@%s]", var);   
+
         } else {
-            sprintf(buffer, "\tdisplayString _%s", var);
+
+            if (isAux(var) == 1) {
+                sprintf(buffer, "\tdisplayString %s", var);    
+            } else {
+                sprintf(buffer, "\tdisplayString _%s", var);
+            }
+        
         }
     }
 
@@ -477,10 +620,26 @@ void read_func() {
     pop(func);
     pop(var);
 
-    if (isConst(var) == 1) {
+    if (isConstInt(var) == 1) {
         sprintf(buffer, "\tgetString %s", var);
+
     } else {
-        sprintf(buffer, "\tgetString _%s", var);
+
+        if(isConstFloat(var) == 1) {
+
+            char *aux = strchr(var, '.');
+            *aux = '_';
+            aux = strchr(var, '-');
+            if ( aux != NULL ){
+                *aux = 'N';
+            }            
+            sprintf(buffer, "\tgetString [@%s]", var);               
+
+        } else {
+
+            sprintf(buffer, "\tgetString _%s", var);
+        }
+
     }
 
     write_to_file(buffer);
@@ -506,23 +665,53 @@ void genera_branch() {
     pop(op_der);
     pop(op_izq);
 
-    if (isConst(op_der) == 1) {
+    if (isConstInt(op_der) == 1) {
         sprintf(buffer_der, "%s", op_der);
     } else {
-        if (isAux(op_der) == 1) {
-            sprintf(buffer_der, "%s", op_der);    
+
+        if(isConstFloat(op_der) == 1) {
+
+            char *aux = strchr(op_der, '.');
+            *aux = '_';
+            aux = strchr(op_der, '-');
+            if ( aux != NULL ){
+                *aux = 'N';
+            }            
+            sprintf(buffer, "[@%s]", op_der);                      
+
         } else {
-            sprintf(buffer_der, "_%s", op_der);
+
+            if (isAux(op_der) == 1) {
+                sprintf(buffer_der, "[%s]", op_der);    
+            } else {
+                sprintf(buffer_der, "[_%s]", op_der);
+            }
         }
+
+
     }
 
-    if (isConst(op_izq) == 1) {
+    if (isConstInt(op_izq) == 1) {
         sprintf(buffer_izq, "%s", op_izq);
     } else {
-        if (isAux(op_izq) == 1) {
-            sprintf(buffer_izq, "%s", op_izq);    
+
+        if(isConstFloat(op_izq) == 1) {
+
+            char *aux = strchr(op_izq, '.');
+            *aux = '_';
+            aux = strchr(op_izq, '-');
+            if ( aux != NULL ){
+                *aux = 'N';
+            }            
+            sprintf(buffer, "[@%s]", op_izq);             
+
         } else {
-            sprintf(buffer_izq, "_%s", op_izq);
+
+            if (isAux(op_izq) == 1) {
+                sprintf(buffer_izq, "[%s]", op_izq);    
+            } else {
+                sprintf(buffer_izq, "[_%s]", op_izq);
+            }
         }
     }
 
@@ -545,7 +734,9 @@ void genera_branch() {
         strcpy(cmp_assembler, "JLE");
     }      
 
-    sprintf(buffer, "\tCMP %s, %s", buffer_izq, buffer_der);
+    sprintf(buffer, "\tmov ecx, %s", buffer_izq);
+    write_to_file(buffer);
+    sprintf(buffer, "\tCMP ecx, %s", buffer_der);
     write_to_file(buffer);
     sprintf(buffer, "\t%s ET_%s\n", cmp_assembler, go_to);
     write_to_file(buffer);
@@ -618,11 +809,22 @@ void print_stack(){
 //
 
 /*
- * Valida si es constante entera o float
+ * Valida si es constante entera
  */ 
-int isConst(const char* name) {
+int isConstInt(const char* name) {
 
-    if (name[0] >= '0' && name[0] <= '9' || name[0] == '-') {
+    if ( (name[0] >= '0' && name[0] <= '9'  || name[0] == '-') && strchr(name, '.') == 0 ) {
+        return 1;
+    }
+    return 0;
+}
+
+/*
+ * Valida si es constante float
+ */ 
+int isConstFloat(const char* name) {
+
+    if ( ( name[0] >= '0' && name[0] <= '9' || name[0] == '-' ) && strchr(name, '.') > 0) {
         return 1;
     }
     return 0;
@@ -661,4 +863,56 @@ int is_in_list(int i) {
     }    
 
     return 0;
+}
+
+/*
+ * Agrega variables auxiliares al cuerpo .DATA
+ */
+void add_aux_to_file(){
+
+    int flag = 0;
+    char buffer[BUFF_MAX];
+    char var_name[BUFF_MAX];
+    FILE* aux_file = fopen(FILENAME_AUX, "w");
+    FILE* out_file = fopen(FILENAME_OUT, "r");
+
+    // Lee el archivo
+    while(fgets(buffer, BUFF_MAX, out_file) != NULL) {
+
+        if(strcmp(buffer, ".DATA\n") == 0 ) {
+
+            flag = 1;
+        }
+       
+        fprintf(aux_file, "%s", buffer);
+        fflush(aux_file);
+
+        if(flag == 1 ){
+
+            for(int i=0; i < aux_cant; i++){
+
+                sprintf(var_name, VAR_AUX_NAME, i);
+                fprintf(aux_file, "\t%s\tdd\t?\n", var_name);
+                fflush(aux_file);
+            }
+
+            flag = 0;
+        }
+    }
+
+    fclose(aux_file);
+    fclose(out_file);
+
+    aux_file = fopen(FILENAME_AUX, "r");
+    out_file = fopen(FILENAME_OUT, "w");    
+
+    // Lee el archivo
+    while(fgets(buffer, BUFF_MAX, aux_file) != NULL) {
+
+        fprintf(out_file, "%s", buffer);
+    }
+
+    fclose(aux_file);
+    fclose(out_file);
+
 }

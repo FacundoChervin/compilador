@@ -1,3 +1,3 @@
 tasm.exe /la /zi Final.asm
-tlink.exe /v Final.obj
+tlink /3 Final.obj numbers.obj /v /s /m
 Final.exe

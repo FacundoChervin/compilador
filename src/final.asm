@@ -1,11 +1,20 @@
 include macros2.asm
 include number.asm
 
-.MODEL SMALL
+.MODEL LARGE
 .386
 .STACK 200h
 
 .DATA
+	@aux0	dd	?
+	@aux1	dd	?
+	@aux2	dd	?
+	@aux3	dd	?
+	@aux4	dd	?
+	@aux5	dd	?
+	@aux6	dd	?
+	@aux7	dd	?
+	@aux8	dd	?
 
 	_a	dd	?
 	_b	dd	?
@@ -14,55 +23,76 @@ include number.asm
 	_f	dd	?
 	_g	dd	?
 	_final	dd	?
-	_const_string_0	dd	"hola"
-	_const_string_1	dd	"12345"
-	_const_string_2	dd	"1234"
-	_const_string_3	dd	"123"
-	_const_string_4	dd	"12"
-	_const_string_5	dd	"1"
-	_const_string_6	dd	""
+	@1_000000	dd	1.000000
+	@2_000000	dd	2.000000
+	@0_010000	dd	0.010000
+	@N1_213000	dd	-1.213000
+	@0_123130	dd	0.123130
+	_const_string_0	db	"12345"
+	_const_string_1	db	"1234"
+	_const_string_2	db	"123"
+	_const_string_3	db	"12"
+	_const_string_4	db	"1"
+	_const_string_5	db	""
 
 .CODE
 
+MOV AX,@DATA
+MOV DS,AX
+FINIT;
+
 START:
-ET_0:
+	fld @1_000000
+	fstp _a
 
-	CMP _a, _b
-	JG ET_59
+	fld @2_000000
+	fstp _b
+
+ET_6:
+
+	mov ecx, [_a]
+	CMP ecx, [_b]
+	JG ET_62
 
 
-	mov _a, 0.010000
+	fld @0_010000
+	fstp _a
 
-	mov _b, -1.213000
+	fld @N1_213000
+	fstp _b
 
-	mov _b, 0.123130
-
-	mov _d, _const_string_0
+	fld @0_123130
+	fstp _b
 
 	getString _d
 
-	CMP 2, _final
-	JL ET_37
+	mov ecx, 2
+	CMP ecx, [_final]
+	JL ET_40
 
 
-	CMP 1, _final
-	JG ET_37
+	mov ecx, 1
+	CMP ecx, [_final]
+	JG ET_40
 
 
 	mov _final, 1
 
-	JMP ET_40
+	JMP ET_43
 
-
-ET_37:
-
-	mov _final, 0
 
 ET_40:
 
-	CMP 1, 2
-	JL ET_57
+	mov _final, 0
 
+ET_43:
+
+	mov ecx, 1
+	CMP ecx, 2
+	JL ET_60
+
+
+	displayString _const_string_0
 
 	displayString _const_string_1
 
@@ -74,47 +104,53 @@ ET_40:
 
 	displayString _const_string_5
 
-	displayString _const_string_6
+ET_60:
 
-ET_57:
-
-	JMP ET_0
+	JMP ET_6
 
 
-ET_59:
+ET_62:
 
-	mov R1, 111
-	sum R1, 222
-	mov @aux1, R1
+	mov eax, 111
+	add eax, 222
+	mov @aux1, eax
 
-	mov R1, 111
-	sum R1, 100
-	mov @aux2, R1
+	mov eax, 111
+	add eax, 100
+	mov @aux2, eax
 
-	mov R1, @aux2
-	sum R1, 333
-	mov @aux3, R1
+	mov eax, [@aux2]
+	add eax, 333
+	mov @aux3, eax
 
-	mov R1, @aux1
-	sum R1, @aux3
-	mov @aux4, R1
+	mov eax, [@aux1]
+	add eax, [@aux3]
+	mov @aux4, eax
 
-	mov R1, @aux4
-	div R1, 3
-	mov @aux5, R1
+	mov eax, [@aux4]
+	mov ebx, 3
+	div ebx
+	mov @aux5, eax
 
-	mov R1, 25
-	mul R1, 1
-	mov @aux6, R1
+	mov eax, 25
+	mov ebx, 1
+	mul ebx
+	mov @aux6, eax
 
-	mov R1, 123
-	sub R1, 1
-	mov @aux7, R1
+	mov eax, 123
+	sub eax, 1
+	mov @aux7, eax
 
-	mov R1, @aux6
-	sum R1, @aux7
-	mov @aux8, R1
+	mov eax, [@aux6]
+	add eax, [@aux7]
+	mov @aux8, eax
 
-	mov _final, @aux8
+	mov eax, [@aux8]
+	mov _final, eax
+
+	mov ah, 1 ; pausa, espera que oprima una tecla
+	int 21h ; AH=1 es el servicio de lectura
+	MOV AX, 4C00h ; Sale del Dos
+	INT 21h       ; Enviamos la interrupcion 21h
 
 END START

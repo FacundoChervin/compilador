@@ -5,18 +5,19 @@ d| |STRING|0
 f| |STRING|0
 g| |ENTERO|0
 final| |ENTERO|0
+1.000000| |FLOAT|0
+2.000000| |FLOAT|0
 0.010000| |FLOAT|0
 -1.213000| |FLOAT|0
 0.123130| |FLOAT|0
-const_string_0|hola|STRING|4
 1| |ENTERO|0
 2| |ENTERO|0
-const_string_1|12345|STRING|5
-const_string_2|1234|STRING|4
-const_string_3|123|STRING|3
-const_string_4|12|STRING|2
-const_string_5|1|STRING|1
-const_string_6||STRING|0
+const_string_0|12345|STRING|5
+const_string_1|1234|STRING|4
+const_string_2|123|STRING|3
+const_string_3|12|STRING|2
+const_string_4|1|STRING|1
+const_string_5||STRING|0
 111| |ENTERO|0
 222| |ENTERO|0
 100| |ENTERO|0
